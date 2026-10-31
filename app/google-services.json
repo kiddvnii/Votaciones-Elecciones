@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "138412895471",
+    "project_id": "registrovotaciones-1799e",
+    "storage_bucket": "registrovotaciones-1799e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:138412895471:android:0561eb9576558d443aff1a",
+        "android_client_info": {
+          "package_name": "com.daniel.votacioneselecciones"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2G8cNBSamqTP7NHFY2uV3wPHAW0D2A7U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

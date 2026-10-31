@@ -1,0 +1,61 @@
+<resources>
+    <string name="app_name">Registro de Votaciones y Elecciones</string>
+
+    
+    <string name="titulo_login">Sistema de Elecciones</string>
+    <string name="subtitulo_login">Ingresa con tu cuenta de Firebase</string>
+    <string name="hint_usuario">Correo electrónico</string>
+    <string name="hint_clave">Contraseña</string>
+    <string name="accion_ingresar">Ingresar</string>
+    <string name="recordar_usuario">Recordar usuario</string>
+    <string name="error_campos_vacios">Completa usuario y contraseña</string>
+    <string name="error_credenciales">Usuario o contraseña incorrectos</string>
+    <string name="ayuda_login">Ingresa con el correo y clave que creaste en Firebase Authentication</string>
+
+    
+    <string name="titulo_menu">Panel principal</string>
+    <string name="menu_elecciones">Elecciones</string>
+    <string name="menu_elecciones_desc">Crear y administrar procesos electorales</string>
+    <string name="menu_candidatos">Candidatos</string>
+    <string name="menu_candidatos_desc">Registrar a quienes participan</string>
+    <string name="menu_votaciones">Votaciones</string>
+    <string name="menu_votaciones_desc">Registrar votos y ver resultados</string>
+    <string name="cerrar_sesion">Cerrar sesión</string>
+    <string name="bienvenida">Hola, %1$s</string>
+
+    
+    <string name="titulo_elecciones">Elecciones</string>
+    <string name="agregar_eleccion">Nueva elección</string>
+    <string name="editar_eleccion">Editar elección</string>
+    <string name="hint_nombre_eleccion">Nombre de la elección</string>
+    <string name="hint_fecha">Fecha (dd-mm-aaaa)</string>
+    <string name="hint_estado">Estado</string>
+    <string name="lista_vacia_elecciones">Aún no hay elecciones. Toca + para crear la primera.</string>
+    <string name="error_eleccion_duplicada">Ya existe una elección con ese nombre.</string>
+
+    
+    <string name="titulo_candidatos">Candidatos</string>
+    <string name="agregar_candidato">Nuevo candidato</string>
+    <string name="editar_candidato">Editar candidato</string>
+    <string name="hint_nombre_candidato">Nombre del candidato</string>
+    <string name="hint_lista">Lista o partido</string>
+    <string name="hint_eleccion">Elección a la que pertenece</string>
+    <string name="lista_vacia_candidatos">Todavía no hay candidatos registrados.</string>
+    <string name="sin_elecciones_aviso">Primero crea una elección para poder agregar candidatos.</string>
+    <string name="error_candidato_duplicado">Ya existe un candidato con ese nombre y lista en esta elección.</string>
+
+    
+    <string name="titulo_votaciones">Votaciones</string>
+    <string name="registrar_voto">Registrar voto</string>
+    <string name="resultados">Resultados</string>
+    <string name="total_votos">Total de votos: %1$d</string>
+    <string name="votos_formato">%1$d voto(s)</string>
+    <string name="lista_vacia_votos">Aún no se han registrado votos.</string>
+    <string name="confirmar_eliminar_titulo">¿Eliminar?</string>
+    <string name="confirmar_eliminar_voto">Esto anulará este voto registrado.</string>
+    <string name="confirmar_eliminar_generico">Esta acción no se puede deshacer.</string>
+    <string name="accion_guardar">Guardar</string>
+    <string name="accion_cancelar">Cancelar</string>
+    <string name="accion_eliminar">Eliminar</string>
+    <string name="accion_editar">Editar</string>
+</resources>

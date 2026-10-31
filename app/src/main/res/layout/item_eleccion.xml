@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" app:cardCornerRadius="16dp" app:cardElevation="3dp">
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp">
+
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+
+            <TextView android:id="@+id/txtNombreEleccion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/texto_primario" android:textSize="16sp" android:fontFamily="sans-serif-medium" tools:text="Centro de Alumnos 2026"/>
+
+            <TextView android:id="@+id/txtFechaEleccion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textColor="@color/texto_secundario" android:textSize="13sp" tools:text="15-10-2026"/>
+
+            <TextView android:id="@+id/txtEstadoEleccion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/bg_pill" android:paddingStart="10dp" android:paddingTop="3dp" android:paddingEnd="10dp" android:paddingBottom="3dp" android:textColor="@color/white" android:textSize="11sp" tools:text="Activa"/>
+        </LinearLayout>
+
+        <ImageButton android:id="@+id/btnEditarEleccion" android:layout_width="48dp" android:layout_height="48dp" android:background="@android:color/transparent" android:contentDescription="@string/accion_editar" android:src="@drawable/ic_edit"/>
+
+        <ImageButton android:id="@+id/btnEliminarEleccion" android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="4dp" android:background="@android:color/transparent" android:contentDescription="@string/accion_eliminar" android:src="@drawable/ic_delete"/>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

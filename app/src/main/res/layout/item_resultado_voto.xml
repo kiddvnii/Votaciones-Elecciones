@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="3dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/txtNombreResultado"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/texto_primario"
+                    android:textSize="16sp"
+                    android:fontFamily="sans-serif-medium"
+                    tools:text="Camila Rojas" />
+
+                <TextView
+                    android:id="@+id/txtListaResultado"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="@color/texto_secundario"
+                    android:textSize="12sp"
+                    tools:text="Lista A - Renovación · Centro de Alumnos 2026" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/txtVotosResultado"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/azul_primario"
+                android:textSize="18sp"
+                android:fontFamily="sans-serif-medium"
+                tools:text="5" />
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/barraProgresoResultado"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:layout_marginTop="10dp"
+            android:progressTint="@color/dorado_acento"
+            android:max="100"
+            tools:progress="60" />
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

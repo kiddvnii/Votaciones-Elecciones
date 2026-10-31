@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:orientation="vertical">
+    <TextView
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="Pruebas de la evaluación" android:textSize="16sp"
+        android:textColor="@color/texto_primario" android:fontFamily="sans-serif-medium" />
+    <TextView
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="La prueba de cierre terminará la app. Ábrela otra vez para enviar el reporte."
+        android:textColor="@color/texto_secundario" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnProbarCierre" style="@style/BotonSecundario"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" android:text="Provocar cierre de prueba" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnErrorNoFatal" style="@style/BotonSecundario"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="Registrar error no fatal" />
+</LinearLayout>

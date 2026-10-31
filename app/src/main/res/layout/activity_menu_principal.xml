@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='utf-8'?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/fondo_app" tools:context=".MenuPrincipalActivity">
+
+    <View android:id="@+id/fondoEncabezado" android:layout_width="0dp" android:layout_height="180dp" android:background="@drawable/bg_encabezado" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
+
+    <TextView android:id="@+id/txtBienvenida" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="24dp" android:layout_marginTop="48dp" android:layout_marginEnd="24dp" android:textColor="@color/white" android:textSize="20sp" android:fontFamily="sans-serif-medium" tools:text="Hola, admin" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
+
+    <TextView android:id="@+id/txtTituloMenu" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="24dp" android:layout_marginTop="4dp" android:layout_marginEnd="24dp" android:alpha="0.85" android:text="@string/titulo_menu" android:textColor="@color/white" android:textSize="14sp" app:layout_constraintStart_toStartOf="@id/txtBienvenida" app:layout_constraintTop_toBottomOf="@id/txtBienvenida"/>
+
+    <ImageButton android:id="@+id/btnCerrarSesion" android:layout_width="40dp" android:layout_height="40dp" android:layout_marginTop="44dp" android:layout_marginEnd="20dp" android:background="@android:color/transparent" android:contentDescription="@string/cerrar_sesion" android:src="@drawable/ic_logout" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent"/>
+
+    <androidx.core.widget.NestedScrollView android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@id/fondoEncabezado" android:layout_marginTop="-40dp">
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="20dp" android:paddingEnd="20dp" android:paddingBottom="24dp">
+
+            <androidx.cardview.widget.CardView android:id="@+id/cardElecciones" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:clickable="true" android:focusable="true" android:foreground="?attr/selectableItemBackground" app:cardCornerRadius="18dp" app:cardElevation="4dp">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:padding="18dp">
+
+                    <FrameLayout android:layout_width="52dp" android:layout_height="52dp" android:background="@drawable/bg_circulo_icono">
+
+                        <ImageView android:layout_width="26dp" android:layout_height="26dp" android:layout_gravity="center" android:contentDescription="@string/menu_elecciones" android:src="@drawable/ic_menu_elecciones"/>
+                    </FrameLayout>
+
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:layout_weight="1" android:orientation="vertical">
+
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/menu_elecciones" android:textColor="@color/texto_primario" android:textSize="17sp" android:fontFamily="sans-serif-medium"/>
+
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/menu_elecciones_desc" android:textColor="@color/texto_secundario" android:textSize="13sp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView android:id="@+id/cardCandidatos" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:clickable="true" android:focusable="true" android:foreground="?attr/selectableItemBackground" app:cardCornerRadius="18dp" app:cardElevation="4dp">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:padding="18dp">
+
+                    <FrameLayout android:layout_width="52dp" android:layout_height="52dp" android:background="@drawable/bg_circulo_icono">
+
+                        <ImageView android:layout_width="26dp" android:layout_height="26dp" android:layout_gravity="center" android:contentDescription="@string/menu_candidatos" android:src="@drawable/ic_menu_candidatos"/>
+                    </FrameLayout>
+
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:layout_weight="1" android:orientation="vertical">
+
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/menu_candidatos" android:textColor="@color/texto_primario" android:textSize="17sp" android:fontFamily="sans-serif-medium"/>
+
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/menu_candidatos_desc" android:textColor="@color/texto_secundario" android:textSize="13sp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView android:id="@+id/cardVotaciones" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:clickable="true" android:focusable="true" android:foreground="?attr/selectableItemBackground" app:cardCornerRadius="18dp" app:cardElevation="4dp">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:padding="18dp">
+
+                    <FrameLayout android:layout_width="52dp" android:layout_height="52dp" android:background="@drawable/bg_circulo_icono">
+
+                        <ImageView android:layout_width="26dp" android:layout_height="26dp" android:layout_gravity="center" android:contentDescription="@string/menu_votaciones" android:src="@drawable/ic_menu_votaciones"/>
+                    </FrameLayout>
+
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:layout_weight="1" android:orientation="vertical">
+
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/menu_votaciones" android:textColor="@color/texto_primario" android:textSize="17sp" android:fontFamily="sans-serif-medium"/>
+
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/menu_votaciones_desc" android:textColor="@color/texto_secundario" android:textSize="13sp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        <LinearLayout android:id="@+id/panelPruebas" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:orientation="vertical" android:visibility="gone"/><TextView android:id="@+id/txtUltimaNotificacion" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Sin notificaciones recibidas en primer plano."/></LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
