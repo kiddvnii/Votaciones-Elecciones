@@ -23,7 +23,7 @@ No hace falta conectar ChatGPT con Firebase para cambiar el código del reposito
 - Entrar en **Asistente electoral con IA** y hacer dos preguntas sucesivas.
 - Ir a **Votaciones**, pulsar **Exportar PDF**, guardar el archivo y comprobar el total y los candidatos.
 - Verificar que ya no aparezca la sección **Pruebas de la evaluación** ni sus botones de provocar un cierre.
-- Compilar con **JDK 17**, SDK Android 36, Gradle 8.11.1, AGP 8.10.1, Kotlin 2.2.21.
+- Compilar con **JDK 17**, SDK Android 36, Gradle 8.11.1, AGP 8.10.1, Kotlin 2.4.21.
 
 **Importante:** No se puede dar por verificada la compilación o ejecución en un dispositivo sin correr Android Studio / GitHub Actions. En los servicios gratuitos de IA las consultas pueden estar sujetas a uso de datos según las condiciones de Google. No ingresar información confidencial.
 
