@@ -32,7 +32,6 @@ class MenuPrincipalActivity : PantallaConSesion() {
             })
             finish()
         }
-        PruebasApp.configurar(this, binding.panelPruebas)
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 100)

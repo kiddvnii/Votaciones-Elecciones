@@ -1,5 +1,3 @@
-import java.io.File
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -48,11 +46,16 @@ android {
 }
 
 dependencies {
-    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation(platform("com.google.firebase:firebase-bom:35.1.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-crashlytics")
+    implementation("com.google.firebase:firebase-ai")
+    implementation("com.google.firebase:firebase-appcheck")
+    debugImplementation("com.google.firebase:firebase-appcheck-debug")
+    releaseImplementation("com.google.firebase:firebase-appcheck-playintegrity")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.8.0")
@@ -67,22 +70,3 @@ dependencies {
 
  
  
-val adbDebugView = androidComponents.sdkComponents.adb
-val fuenteActivador = rootProject.layout.projectDirectory.file("tools/ActivarDebugView.java")
-val paqueteDebugView = android.defaultConfig.applicationId.orEmpty()
-val activarDebugView = tasks.register<Exec>("activarDebugView") {
-    group = "verification"
-    description = "Activa y verifica DebugView en los dispositivos Android conectados."
-    inputs.file(fuenteActivador)
-     
-    isIgnoreExitValue = true
-    doFirst {
-        val nombreJava = if (System.getProperty("os.name").contains("Windows", true)) "java.exe" else "java"
-        val ejecutableJava = File(System.getProperty("java.home"), "bin/" + nombreJava)
-        commandLine(ejecutableJava.absolutePath, "--source", "17",
-            fuenteActivador.asFile.absolutePath, adbDebugView.get().asFile.absolutePath, paqueteDebugView)
-    }
-}
-tasks.matching { it.name == "assembleDebug" || it.name == "installDebug" }.configureEach {
-    finalizedBy(activarDebugView)
-}
