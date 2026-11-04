@@ -27,4 +27,4 @@ jobs:
       - name: Compile debug and run unit tests
         run: |
           chmod +x gradlew
-          ./gradlew :app:assembleDebug :app:testDebugUnitTest --no-daemon
+          ./gradlew :app:assembleDebug :app:assembleRelease :app:testDebugUnitTest --no-daemon
