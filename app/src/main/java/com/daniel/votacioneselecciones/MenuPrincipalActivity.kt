@@ -24,6 +24,11 @@ class MenuPrincipalActivity : PantallaConSesion() {
         binding.cardElecciones.setOnClickListener { startActivity(Intent(this, Elecciones::class.java)) }
         binding.cardCandidatos.setOnClickListener { startActivity(Intent(this, Candidato::class.java)) }
         binding.cardVotaciones.setOnClickListener { startActivity(Intent(this, Votaciones::class.java)) }
+        binding.btnTranscribir.setOnClickListener { startActivity(Intent(this, TranscripcionActivity::class.java)) }
+        binding.btnAsistente.setOnClickListener { startActivity(Intent(this, AsistenteActivity::class.java)) }
+        binding.btnReportePdf.setOnClickListener {
+            startActivity(Intent(this, Votaciones::class.java).putExtra("exportar_pdf", true))
+        }
         binding.btnCerrarSesion.setOnClickListener {
             SesionLocal.cerrarSesion()
             mensajes.edit().remove("titulo").remove("contenido").apply()
@@ -32,6 +37,7 @@ class MenuPrincipalActivity : PantallaConSesion() {
             })
             finish()
         }
+        PruebasApp.configurar(this, binding.panelPruebas)
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 100)

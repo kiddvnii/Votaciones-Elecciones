@@ -67,7 +67,7 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-        <TextView android:id="@+id/txtUltimaNotificacion" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Sin notificaciones recibidas en primer plano."/></LinearLayout>
+        <LinearLayout android:id="@+id/panelPruebas" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:orientation="vertical" android:visibility="gone"/><TextView android:id="@+id/txtUltimaNotificacion" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Sin notificaciones recibidas en primer plano."/></LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -40,6 +40,15 @@
             android:fontFamily="sans-serif-medium" />
 
         <ImageButton
+            android:id="@+id/btnExportarPdf"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="Exportar resultados a PDF"
+            android:src="@drawable/ic_resultados"
+            android:tooltipText="Exportar PDF" />
+
+        <ImageButton
             android:id="@+id/btnResultados"
             android:layout_width="36dp"
             android:layout_height="36dp"
