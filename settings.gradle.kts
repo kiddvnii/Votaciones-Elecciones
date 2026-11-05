@@ -13,7 +13,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "RegistroVotacionesElecciones"
+rootProject.name = "VotacionesYElecciones"
 include(":app")
 
 include(":modelos")

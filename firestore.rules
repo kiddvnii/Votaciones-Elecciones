@@ -1,12 +1,6 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Modelo: documentos privados con ownerUid inmutable.
-    // elecciones: nombre/fecha/fechaTermino/estado/lugar (string), mesas (int).
-    // fechaTermino es obligatoria en nuevas escrituras; documentos antiguos siguen siendo legibles.
-    // candidatos: nombre/lista/cargo/propuesta/eleccionId (string), edad (int).
-    // votos: eleccionId/candidatoId/fechaHora (string), creadoEn (int, ms).
-    // IDs de relaciones y campos de votos no se modifican tras crearse.
     function autenticado() {
       return request.auth != null;
     }
@@ -40,8 +34,6 @@ service cloud.firestore {
         && texto(d.lugar, 2, 120)
         && d.mesas is int && d.mesas >= 1 && d.mesas <= 1000;
     }
-    // Date-only values use the device's calendar day. One UTC day of tolerance covers time zones.
-    // The app's calendar and repository enforce today/future in the device's actual time zone.
     function fechasNuevasValidas(d) {
       return dia(d.fecha) >= request.time.date() - duration.value(1, 'd')
         && dia(d.fechaTermino) >= request.time.date() - duration.value(1, 'd');
@@ -79,7 +71,6 @@ service cloud.firestore {
         && propietario(candidato.data) && candidato.data.eleccionId == d.eleccionId;
     }
     match /elecciones/{id} {
-      // La app consulta documentos inexistentes dentro de transacciones de alta.
       allow get: if autenticado() &&
         (!exists(/databases/$(database)/documents/elecciones/$(id)) || propietario(resource.data));
       allow list: if propietario(resource.data);
@@ -108,10 +99,8 @@ service cloud.firestore {
       allow list: if propietario(resource.data);
       allow create: if votoValido(request.resource.data)
         && relacionVotoValida(request.resource.data);
-      // La app registra o elimina votos; no permite editarlos.
       allow update: if false;
       allow delete: if propietario(resource.data);
     }
-    // Cualquier otra ruta queda denegada por defecto.
   }
 }

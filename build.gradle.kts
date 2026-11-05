@@ -4,25 +4,21 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
 
- 
 plugins {
     id("com.android.application") version "8.10.1" apply false
     id("com.android.asset-pack") version "8.10.1" apply false
     id("org.jetbrains.kotlin.android") version "2.4.21" apply false
     id("org.jetbrains.kotlin.jvm") version "2.4.21" apply false
-     
-     
+
     id("com.google.gms.google-services") version "4.5.0" apply false
     id("com.google.firebase.crashlytics") version "3.0.7" apply false
 }
-// Models are acquired at BUILD time, never by the installed app.
-// Every normal Android Studio/CI build includes the same pinned chatbot weights.
 val prepararModelos by tasks.registering {
     group = "build setup"
     description = "Obtiene y verifica los modelos incluidos antes de empaquetar la app"
     val destino = layout.projectDirectory.dir("modelos/src/main/assets/modelos")
     outputs.dir(destino)
-    outputs.upToDateWhen { false } // Recheck cached bytes, including after interrupted builds.
+    outputs.upToDateWhen { false }
     doLast {
         val carpeta = destino.asFile.apply { mkdirs() }
         fun sha(archivo: File): String {

@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.daniel.votacioneselecciones"
+    namespace = "com.daniel.votacionesyelecciones"
     compileSdk = 36
     assetPacks += listOf(":modelos")
     sourceSets.getByName("debug").assets.srcDir("../modelos/src/main/assets")
@@ -18,8 +18,8 @@ android {
         minSdk = 24
         targetSdk = 36
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
-        versionCode = 8
-        versionName = "1.5"
+        versionCode = 9
+        versionName = "1.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

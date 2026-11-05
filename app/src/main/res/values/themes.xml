@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     
-    <style name="Base.Theme.RegistroVotacionesElecciones" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Base.Theme.VotacionesYElecciones" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/azul_primario</item>
         <item name="colorPrimaryVariant">@color/azul_primario_oscuro</item>
         <item name="colorOnPrimary">@color/white</item>
@@ -10,7 +10,7 @@
         <item name="android:statusBarColor">@color/azul_primario_oscuro</item>
     </style>
 
-    <style name="Theme.RegistroVotacionesElecciones" parent="Base.Theme.RegistroVotacionesElecciones" />
+    <style name="Theme.VotacionesYElecciones" parent="Base.Theme.VotacionesYElecciones" />
 
     
     <style name="BotonPrimario" parent="Widget.Material3.Button">
