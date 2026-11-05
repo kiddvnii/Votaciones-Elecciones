@@ -12,7 +12,7 @@ import com.daniel.votacioneselecciones.modelo.SesionLocal
 import com.daniel.votacioneselecciones.modelo.AnalyticsHelper
 import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.firestore.FirebaseFirestoreException
+import android.util.Log
 
  
 abstract class PantallaConSesion : AppCompatActivity() {
@@ -79,25 +79,20 @@ abstract class PantallaConSesion : AppCompatActivity() {
                 ocupada = false
                 if (isFinishing || isDestroyed) return@addOnCompleteListener
                 if (resultado.isSuccessful) alExito(resultado.result)
-                else informarError(resultado.exception ?: IllegalStateException("No se pudo completar la operación."), reintentar)
+                else informarError(resultado.exception ?: IllegalStateException("No se pudo completar la operación."), reintentar, mensaje)
             }
         } catch (error: Exception) {
             carga?.dismiss()
             carga = null
             ocupada = false
-            informarError(error, reintentar)
+            informarError(error, reintentar, mensaje)
         }
     }
 
-    private fun informarError(error: Exception, reintentar: (() -> Unit)?) {
-        val causa = generateSequence<Throwable>(error) { it.cause }.last()
-        val mensaje = when {
-            causa is FirebaseFirestoreException && causa.code == FirebaseFirestoreException.Code.PERMISSION_DENIED ->
-                "Acceso denegado. Revisa la sesión y las reglas de Firestore."
-            causa is FirebaseFirestoreException -> "No se pudo completar la operación en Firebase. Revisa tu conexión y vuelve a intentar."
-            causa is IllegalArgumentException || causa is IllegalStateException -> causa.message ?: "Revisa los datos ingresados."
-            else -> "No se pudo completar la operación. Revisa tu conexión y vuelve a intentar."
-        }
+    private fun informarError(error: Exception, reintentar: (() -> Unit)?, operacion: String) {
+        // Keep the complete chain: Firestore wraps its status around lower-level exceptions.
+        Log.e("OperacionFirebase", "$operacion Falló la operación.", error)
+        val mensaje = ErroresOperacion.mensaje(error)
         if (reintentar == null) aviso(mensaje)
         else Snackbar.make(findViewById(android.R.id.content), mensaje, Snackbar.LENGTH_INDEFINITE)
             .setAction("Reintentar") { reintentar() }.show()
