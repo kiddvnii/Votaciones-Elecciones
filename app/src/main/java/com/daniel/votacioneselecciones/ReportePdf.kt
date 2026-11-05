@@ -1,8 +1,10 @@
 package com.daniel.votacioneselecciones
 
-import android.content.Context
-import android.graphics.Paint
-import android.graphics.pdf.PdfDocument
+import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.pdmodel.PDPage
+import com.tom_roush.pdfbox.pdmodel.PDPageContentStream
+import com.tom_roush.pdfbox.pdmodel.common.PDRectangle
+import com.tom_roush.pdfbox.pdmodel.font.PDType1Font
 import com.daniel.votacioneselecciones.modelo.CandidatoModelo
 import com.daniel.votacioneselecciones.modelo.Eleccion
 import com.daniel.votacioneselecciones.modelo.RegistroVoto
@@ -12,76 +14,64 @@ import java.util.Date
 import java.util.Locale
 
 object ReportePdf {
-    fun escribir(
-        salida: OutputStream,
-        elecciones: List<Eleccion>,
-        candidatos: List<CandidatoModelo>,
-        votos: List<RegistroVoto>
-    ) {
-        val pdf = PdfDocument()
-        val ancho = 595
-        val alto = 842
-        val margen = 42f
-        val normal = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = android.graphics.Color.BLACK
-            textSize = 11f
-        }
-        val titulo = Paint(normal).apply {
-            textSize = 19f
-            isFakeBoldText = true
-        }
-        val subtitulo = Paint(normal).apply {
-            textSize = 13f
-            isFakeBoldText = true
-        }
-        var numero = 0
-        var pagina: PdfDocument.Page? = null
-        var y = 0f
-        fun siguientePagina() {
-            pagina?.let { pdf.finishPage(it) }
-            numero++
-            pagina = pdf.startPage(PdfDocument.PageInfo.Builder(ancho, alto, numero).create())
-            y = margen
-        }
-        fun linea(texto: String, estilo: Paint = normal, salto: Float = 19f) {
-            if (pagina == null || y + salto > alto - margen) siguientePagina()
-            val canvas = pagina!!.canvas
-            val disponible = ancho - margen * 2
-            var restante = texto
-            if (restante.isEmpty()) {
-                y += salto
-                return
+    fun escribir(salida: OutputStream, elecciones: List<Eleccion>, candidatos: List<CandidatoModelo>, votos: List<RegistroVoto>) {
+        PDDocument().use { pdf ->
+            var stream: PDPageContentStream? = null
+            var y = 0f
+            val font = PDType1Font.HELVETICA
+            fun pagina() {
+                stream?.close()
+                val hoja = PDPage(PDRectangle.A4)
+                pdf.addPage(hoja)
+                stream = PDPageContentStream(pdf, hoja)
+                y = PDRectangle.A4.height - 42f
             }
-            while (restante.isNotEmpty()) {
-                if (y + salto > alto - margen) siguientePagina()
-                val cantidad = estilo.breakText(restante, true, disponible, null).coerceAtLeast(1)
-                pagina!!.canvas.drawText(restante.take(cantidad), margen, y + estilo.textSize, estilo)
-                restante = restante.drop(cantidad).trimStart()
-                y += salto
-            }
-        }
-        try {
-            linea("Reporte de votaciones", titulo, 30f)
-            linea("Generado: " + SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(Date()))
-            linea("Total de votos: ${votos.size}", subtitulo, 24f)
-            for (eleccion in elecciones.sortedBy { it.nombre }) {
-                linea("")
-                linea(eleccion.nombre + " (" + eleccion.estado + ")", subtitulo, 24f)
-                linea("Fecha: ${eleccion.fecha} · Lugar: ${eleccion.lugar}")
-                val registrados = votos.filter { it.eleccionId == eleccion.id }
-                linea("Votos registrados: ${registrados.size}")
-                val participantes = candidatos.filter { it.eleccionId == eleccion.id }
-                for (candidato in participantes.sortedBy { it.nombre }) {
-                    val cantidad = registrados.count { it.candidatoId == candidato.id }
-                    linea("• ${candidato.nombre} (${candidato.lista}): $cantidad voto(s)")
+            // Helvetica/WinAnsi cannot represent every Unicode glyph. Keep Spanish accents;
+            // replace unsupported code points explicitly so one emoji cannot abort the report.
+            fun imprimible(texto: String): String = buildString {
+                texto.codePoints().forEach { punto ->
+                    val caracter = String(Character.toChars(punto))
+                    append(if (runCatching { font.getStringWidth(caracter) }.isSuccess && punto >= 32) caracter else "?")
                 }
-                if (participantes.isEmpty()) linea("Sin candidatos registrados.")
             }
-            if (elecciones.isEmpty()) linea("No hay elecciones registradas.")
-            pagina?.let { pdf.finishPage(it) }
-            pdf.writeTo(salida)
-        } finally {
-            pdf.close()
+            fun linea(texto: String, tamano: Float = 11f) {
+                var restante = imprimible(texto)
+                do {
+                    if (stream == null || y < 42f + tamano) pagina()
+                    var cantidad = 0
+                    var ancho = 0f
+                    for (caracter in restante) {
+                        val siguiente = font.getStringWidth(caracter.toString()) / 1000f * tamano
+                        if (ancho + siguiente > PDRectangle.A4.width - 84f) break
+                        ancho += siguiente; cantidad++
+                    }
+                    val fragmento = restante.take(cantidad)
+                    stream!!.apply {
+                        beginText(); setFont(font, tamano); newLineAtOffset(42f, y); showText(fragmento); endText()
+                    }
+                    y -= tamano + 8f
+                    restante = restante.drop(cantidad).trimStart()
+                } while (restante.isNotEmpty())
+            }
+            try {
+                linea("Reporte de votaciones", 19f)
+                linea("Generado: " + SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(Date()))
+                linea("Total de votos: ${votos.size}", 13f)
+                for (eleccion in elecciones.sortedBy { it.nombre }) {
+                    linea("")
+                    linea("${eleccion.nombre} (${eleccion.estado})", 13f)
+                    linea("Fecha: ${eleccion.fecha} · Lugar: ${eleccion.lugar}")
+                    val registrados = votos.filter { it.eleccionId == eleccion.id }
+                    linea("Votos registrados: ${registrados.size}")
+                    val participantes = candidatos.filter { it.eleccionId == eleccion.id }
+                    for (candidato in participantes.sortedBy { it.nombre }) {
+                        linea("- ${candidato.nombre} (${candidato.lista}): ${registrados.count { it.candidatoId == candidato.id }} voto(s)")
+                    }
+                    if (participantes.isEmpty()) linea("Sin candidatos registrados.")
+                }
+                if (elecciones.isEmpty()) linea("No hay elecciones registradas.")
+            } finally { stream?.close() }
+            pdf.save(salida)
         }
     }
 }

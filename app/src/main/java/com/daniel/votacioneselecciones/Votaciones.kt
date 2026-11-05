@@ -1,6 +1,11 @@
 package com.daniel.votacioneselecciones
 
 import android.os.Bundle
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CancellationException
 import android.net.Uri
 import androidx.activity.result.contract.ActivityResultContracts
 import android.view.LayoutInflater
@@ -133,13 +138,18 @@ class Votaciones : PantallaConSesion() {
 
     private fun guardarReporte(uri: Uri) {
         ejecutar("Preparando reporte PDF…", ::cargarDatos) { datos ->
-            try {
-                contentResolver.openOutputStream(uri)?.use { salida ->
-                    ReportePdf.escribir(salida, datos.elecciones, datos.candidatos, datos.votos)
-                } ?: error("No se pudo abrir el documento")
-                aviso("Reporte PDF guardado.")
-            } catch (error: Exception) {
-                aviso("No se pudo generar el reporte PDF.")
+            lifecycleScope.launch {
+                binding.btnExportarPdf.isEnabled = false
+                try {
+                    withContext(Dispatchers.IO) {
+                        contentResolver.openOutputStream(uri)?.use { salida ->
+                            ReportePdf.escribir(salida, datos.elecciones, datos.candidatos, datos.votos)
+                        } ?: error("No se pudo abrir el documento")
+                    }
+                    aviso("Reporte PDF guardado.")
+                } catch (error: CancellationException) { throw error }
+                catch (error: Exception) { aviso("No se pudo generar el reporte PDF. El archivo puede haber quedado incompleto.") }
+                finally { binding.btnExportarPdf.isEnabled = true }
             }
         }
     }

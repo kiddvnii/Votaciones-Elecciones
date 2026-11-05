@@ -14,6 +14,7 @@ android {
         applicationId = "com.daniel.votacioneselecciones"
         minSdk = 24
         targetSdk = 36
+        ndk { abiFilters += "arm64-v8a" }
         versionCode = 5
         versionName = "1.3"
 
@@ -48,10 +49,13 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-crashlytics")
-    implementation("com.google.firebase:firebase-ai")
     implementation("com.google.firebase:firebase-appcheck")
     debugImplementation("com.google.firebase:firebase-appcheck-debug")
     implementation("com.google.firebase:firebase-appcheck-playintegrity")
+    implementation("com.alphacephei:vosk-android:0.3.75@aar")
+    implementation("net.java.dev.jna:jna:5.18.1@aar")
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.18.1")
+    implementation("com.tom-roush:pdfbox-android:2.0.27.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
