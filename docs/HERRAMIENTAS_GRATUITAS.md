@@ -6,7 +6,7 @@ La app 1.4 incluye **Vosk español pequeño 0.42** y **Qwen3 0.6B para LiteRT-LM
 
 El primer inicio necesita espacio libre adicional: el modelo LLM ocupa aproximadamente 614 MB (586 MiB), el ZIP de voz unos 39 MB y la extracción de voz requiere más espacio. Cuenta además la instalación y las copias privadas; reserva varios GB libres. La preparación puede tardar y no equivale a una descarga. Se necesita un dispositivo arm64 con suficiente RAM; la inclusión de pesos no garantiza que todos los teléfonos puedan ejecutar el motor nativo. Un cierre durante la preparación permite reintentar en la siguiente apertura sin instalar archivos parciales como válidos.
 
-Las pantallas usan tarjetas, botones Material, burbujas de conversación, sugerencias, estados de preparación/error y márgenes reales para barras del sistema, cámara y teclado. El dictado tiene vista parcial, texto editable, contador, borrado con confirmación y guardado TXT. El chat tiene conversación local, reinicio y respuestas limitadas a 256 tokens, con contexto de 2048 tokens. No hay saludos ni respuestas de respaldo presentados como inferencia. Las sugerencias solo rellenan la pregunta.
+Las pantallas usan tarjetas, botones Material, burbujas de conversación, sugerencias, estados de preparación/error y márgenes reales para barras del sistema, cámara y teclado. El dictado tiene vista parcial, texto editable, contador, borrado con confirmación y guardado TXT. El chat tiene conversación local, reinicio y respuestas limitadas a 256 tokens, con contexto de 2048 tokens. La generación usa selección greedy (topK=1, temperatura 0) para reducir respuestas aleatorias; eso no garantiza exactitud. No hay saludos ni respuestas de respaldo presentados como inferencia. Las sugerencias solo rellenan la pregunta.
 
 ## Tres librerías Android externas
 
@@ -45,7 +45,7 @@ Si una descarga del equipo de compilación falla o el SHA-256 del chatbot no coi
 
 ## Verificación
 
-CI compila debug, release y bundleRelease; ejecuta pruebas unitarias del importador ZIP y copia limitada; comprueba los archivos reales dentro de APK/AAB y SHA-256 del LLM; verifica alineación ZIP a 16 KB. El módulo JVM `verificacion` usa LiteRT-LM **0.18.1**, los mismos pesos y CPU para ejecutar generación real y una pregunta de seguimiento. Esa prueba de host no certifica la JNI Android ni sustituye probar un teléfono.
+CI compila debug, release y bundleRelease; ejecuta pruebas unitarias del importador ZIP y copia limitada; comprueba los archivos reales dentro de APK/AAB y SHA-256 del LLM; verifica alineación ZIP a 16 KB. El módulo JVM `verificacion` usa LiteRT-LM **0.18.1**, los mismos pesos y CPU para ejecutar generación real y una pregunta de seguimiento, comprobando además una respuesta aritmética básica. Esa prueba de host no certifica la JNI Android ni sustituye probar un teléfono.
 
 Pruebas de dispositivo necesarias: arranque sin red con instalación nueva, preparación interrumpida, dictado en español, permiso denegado, editar/borrar/guardar TXT, conversación y reinicio, límite de contexto, espacio/RAM insuficientes, rotación, teclado, texto grande, barra de estado/cámara, PDF vacío/varias páginas/acentos y regresiones de Auth/Firestore/notificaciones. La app requiere inicio de sesión; las consultas Firestore pueden necesitar internet, aunque estas dos herramientas procesan localmente.
 
