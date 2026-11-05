@@ -1,4 +1,4 @@
-# VotacionesElecciones
+# VotacionesYElecciones
 
 Aplicación Android para administrar elecciones, candidatos y votos. Usa Firebase para las cuentas y los datos, e incluye dictado en español, un asistente local y reportes PDF.
 
@@ -17,9 +17,9 @@ La primera compilación descarga y verifica los modelos. El APK debug los incluy
 
 | Función | Librería | Código |
 |---|---|---|
-| Voz a texto | Vosk Android 0.3.75 | [TranscripcionActivity.kt](app/src/main/java/com/daniel/votacioneselecciones/TranscripcionActivity.kt) |
-| Asistente local | LiteRT-LM 0.18.1 | [AsistenteActivity.kt](app/src/main/java/com/daniel/votacioneselecciones/AsistenteActivity.kt) |
-| Reportes PDF | PdfBox-Android 2.0.27.0 | [ReportePdf.kt](app/src/main/java/com/daniel/votacioneselecciones/ReportePdf.kt) |
+| Voz a texto | Vosk Android 0.3.75 | [TranscripcionActivity.kt](app/src/main/java/com/daniel/votacionesyelecciones/TranscripcionActivity.kt) |
+| Asistente local | LiteRT-LM 0.18.1 | [AsistenteActivity.kt](app/src/main/java/com/daniel/votacionesyelecciones/AsistenteActivity.kt) |
+| Reportes PDF | PdfBox-Android 2.0.27.0 | [ReportePdf.kt](app/src/main/java/com/daniel/votacionesyelecciones/ReportePdf.kt) |
 
 Las dependencias están en [app/build.gradle.kts](app/build.gradle.kts). El dictado y el asistente procesan los datos en el dispositivo; Firebase requiere conexión para consultar y guardar registros.
 

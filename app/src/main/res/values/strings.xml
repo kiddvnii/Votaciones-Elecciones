@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Registro de Votaciones y Elecciones</string>
+    <string name="app_name">VotacionesYElecciones</string>
 
     
     <string name="titulo_login">Sistema de Elecciones</string>
