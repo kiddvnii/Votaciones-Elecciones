@@ -17,9 +17,9 @@ android {
         applicationId = "com.daniel.votacioneselecciones"
         minSdk = 24
         targetSdk = 36
-        ndk { abiFilters += "arm64-v8a" }
-        versionCode = 6
-        versionName = "1.4"
+        ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
+        versionCode = 8
+        versionName = "1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

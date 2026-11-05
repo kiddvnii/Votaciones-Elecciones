@@ -7,5 +7,6 @@ data class Eleccion(
     val estado: String = "Activa",
     val lugar: String = "",
     val mesas: Int = 1,
-    val ownerUid: String = ""
+    val ownerUid: String = "",
+    val fechaTermino: String = ""
 )

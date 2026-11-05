@@ -30,6 +30,18 @@ class TranscripcionActivity : PantallaConSesion() {
     private var reconocedor: Recognizer? = null
     private var generacion = 0
     private var preparando = false
+    private var ultimaParcial = ""
+    private var palabrasDetectadas = false
+    private val avisos = android.os.Handler(android.os.Looper.getMainLooper())
+    private val sinPalabras = Runnable {
+        if (!destruida && servicio != null && !palabrasDetectadas) {
+            diseno.estado("Aún no se reconocen palabras. Si usas el emulador, activa Microphone → Virtual microphone uses host audio input. En un teléfono, revisa el permiso y habla cerca del micrófono.")
+        }
+    }
+    private val borrador by lazy {
+        val uid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
+        getSharedPreferences("borrador-dictado-$uid", MODE_PRIVATE)
+    }
     private val worker = Executors.newSingleThreadExecutor()
     @Volatile private var destruida = false
     private val permiso = registerForActivityResult(ActivityResultContracts.RequestPermission()) { permitido ->
@@ -70,13 +82,16 @@ class TranscripcionActivity : PantallaConSesion() {
             setTextColor(Color.rgb(30, 41, 59)); setHintTextColor(diseno.gris)
             setPadding(0, diseno.dp(8), 0, diseno.dp(8)); background = null
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
-            setText(savedInstanceState?.getString("texto").orEmpty())
+            setText(savedInstanceState?.getString("texto") ?: borrador.getString("texto", "").orEmpty())
         }
         tarjeta.addView(texto, LinearLayout.LayoutParams(-1, -2))
         parcial = diseno.texto("", 14).apply { visibility = View.GONE }
-        tarjeta.addView(parcial)
+        parcial.setPadding(0, 0, 0, diseno.dp(10))
+        parcial.maxLines = 3
+        parcial.ellipsize = android.text.TextUtils.TruncateAt.END
+        diseno.pie.addView(parcial, LinearLayout.LayoutParams(-1, -2))
         diseno.agregar(tarjeta)
-        diseno.agregar(diseno.texto("Para un mejor resultado, habla cerca del micrófono y evita el ruido. Puedes corregir el texto antes de guardarlo.", 13))
+        diseno.agregar(diseno.texto("El borrador se conserva en este dispositivo. Usa Guardar TXT para crear un archivo. Para dictar, habla cerca del micrófono y evita el ruido.", 13))
         hablar = diseno.boton("Empezar a dictar").apply {
             isEnabled = false
             setIconResource(R.drawable.ic_microfono)
@@ -98,7 +113,11 @@ class TranscripcionActivity : PantallaConSesion() {
         }
         guardarBoton = diseno.boton("Guardar TXT", true).apply {
             isEnabled = texto.text.isNotBlank()
-            setOnClickListener { detener(); if (texto.text.isNotBlank()) guardar.launch("transcripcion.txt") }
+            setOnClickListener {
+                detener()
+                if (texto.text.isNotBlank()) guardar.launch("transcripcion.txt")
+                else aviso("Todavía no se reconoció texto. Revisa la entrada del micrófono.")
+            }
         }
         fila.addView(limpiar, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = diseno.dp(10) })
         fila.addView(guardarBoton, LinearLayout.LayoutParams(0, -2, 1f))
@@ -108,7 +127,8 @@ class TranscripcionActivity : PantallaConSesion() {
         })
         texto.addTextChangedListener {
             contador.text = "${it?.length ?: 0} caracteres"
-            guardarBoton.isEnabled = !it.isNullOrBlank()
+            guardarBoton.isEnabled = !it.isNullOrBlank() || servicio != null
+            borrador.edit().putString("texto", it?.toString().orEmpty()).apply()
         }
         contador.text = "${texto.length()} caracteres"
         preparar()
@@ -138,11 +158,19 @@ class TranscripcionActivity : PantallaConSesion() {
             reconocedor = Recognizer(actual, 16000f)
             val nuevo = SpeechService(reconocedor, 16000f)
             servicio = nuevo
+            ultimaParcial = ""; palabrasDetectadas = false
             val turno = ++generacion
             val escucha = object : RecognitionListener {
                 private fun vigente() = !destruida && turno == generacion
                 override fun onPartialResult(h: String) {
-                    if (vigente()) { parcial.visibility = View.VISIBLE; parcial.text = frase(h, "partial") }
+                    if (vigente()) {
+                        ultimaParcial = frase(h, "partial")
+                        if (ultimaParcial.isNotBlank()) {
+                            palabrasDetectadas = true
+                            parcial.visibility = View.VISIBLE
+                            parcial.text = "En curso: $ultimaParcial"
+                        }
+                    }
                 }
                 override fun onResult(h: String) { if (!destruida) agregar(h) }
                 override fun onFinalResult(h: String) { if (vigente()) { agregar(h); detener(false) } }
@@ -153,6 +181,9 @@ class TranscripcionActivity : PantallaConSesion() {
             }
             check(nuevo.startListening(escucha))
             hablar.text = "Detener dictado"
+            guardarBoton.isEnabled = true
+            parcial.visibility = View.VISIBLE; parcial.text = "Esperando voz…"
+            avisos.postDelayed(sinPalabras, 10000)
             diseno.estado("Te estamos escuchando…", ocupado = true)
         } catch (error: Exception) {
             detener(false)
@@ -162,28 +193,45 @@ class TranscripcionActivity : PantallaConSesion() {
     private fun detener(recogerFinal: Boolean = true) {
         if (servicio == null && reconocedor == null) return
         generacion++
+        avisos.removeCallbacks(sinPalabras)
         servicio?.cancel()
-        if (recogerFinal && !destruida) reconocedor?.let { agregar(it.finalResult) }
+        if (recogerFinal && !destruida) {
+            val final = reconocedor?.let { frase(it.finalResult, "text") }.orEmpty()
+            agregarFrase(final.ifBlank { ultimaParcial })
+        }
         servicio?.shutdown(); servicio = null
         reconocedor?.close(); reconocedor = null
         if (!destruida) {
             hablar.text = "Empezar a dictar"; parcial.visibility = View.GONE
-            diseno.estado("Dictado detenido · Puedes editar y guardar el texto")
+            guardarBoton.isEnabled = texto.text.isNotBlank()
+            diseno.estado(if (palabrasDetectadas) "Dictado detenido · Borrador conservado; puedes editar y guardar TXT"
+                else "No se reconocieron palabras. Revisa el micrófono; en el emulador debes habilitar la entrada de audio del PC.")
         }
     }
     private fun frase(json: String, campo: String) = runCatching { JSONObject(json).optString(campo) }.getOrDefault("")
     private fun agregar(resultado: String) {
-        val frase = frase(resultado, "text")
-        if (frase.isNotBlank()) texto.append((if (texto.text.isEmpty()) "" else "\n") + frase)
+        ultimaParcial = ""
+        parcial.visibility = View.GONE
+        agregarFrase(frase(resultado, "text"))
+    }
+    private fun agregarFrase(frase: String) {
+        if (frase.isNotBlank()) {
+            palabrasDetectadas = true
+            texto.append((if (texto.text.isEmpty()) "" else "\n") + frase)
+        }
     }
     private fun fallo(mensaje: String) {
         preparando = false; diseno.estado(mensaje, error = true)
         reintentar.visibility = View.VISIBLE; hablar.isEnabled = false
     }
     private fun ui(accion: () -> Unit) = runOnUiThread { if (!destruida) accion() }
-    override fun onSaveInstanceState(outState: Bundle) { outState.putString("texto", texto.text.toString()); super.onSaveInstanceState(outState) }
-    override fun onPause() { detener(); super.onPause() }
+    override fun onSaveInstanceState(outState: Bundle) { detener(); outState.putString("texto", texto.text.toString()); super.onSaveInstanceState(outState) }
+    override fun onPause() {
+        detener()
+        if (::texto.isInitialized) borrador.edit().putString("texto", texto.text.toString()).apply()
+        super.onPause()
+    }
     override fun onDestroy() {
-        destruida = true; detener(false); modelo?.close(); modelo = null; worker.shutdown(); super.onDestroy()
+        destruida = true; avisos.removeCallbacksAndMessages(null); detener(false); modelo?.close(); modelo = null; worker.shutdown(); super.onDestroy()
     }
 }

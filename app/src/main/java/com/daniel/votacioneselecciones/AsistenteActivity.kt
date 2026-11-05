@@ -77,6 +77,10 @@ class AsistenteActivity : PantallaConSesion() {
     }
     private fun preparar() {
         if (ocupadaIa) return
+        if (CompatibilidadMotor.usaArmTraducido(android.os.Build.SUPPORTED_ABIS.firstOrNull().orEmpty(), applicationInfo.nativeLibraryDir)) {
+            fallo("Esta instalación usa ARM traducido en un emulador x86. Instala la versión 1.4.1 o posterior con soporte x86_64 nativo.")
+            return
+        }
         ocupado("Preparando el asistente incluido. La primera vez puede tardar un momento…")
         reintentar.visibility = View.GONE
         worker.execute {

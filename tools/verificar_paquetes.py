@@ -10,6 +10,10 @@ for paquete, prefijo in [
     ("app/build/outputs/bundle/release/app-release.aab", "modelos/assets/"),
 ]:
     with ZipFile(paquete) as z:
+        lib_prefijo = "base/lib/" if paquete.endswith(".aab") else "lib/"
+        for abi in ("arm64-v8a", "x86_64"):
+            for biblioteca in ("liblitertlm_jni.so", "libvosk.so", "libjnidispatch.so"):
+                assert lib_prefijo + abi + "/" + biblioteca in z.namelist(), f"Falta {abi}/{biblioteca}"
         chat = prefijo + "modelos/asistente-qwen3.litertlm"
         voz = prefijo + "modelos/voz-es.zip"
         assert 600_000_000 < z.getinfo(chat).file_size < 630_000_000

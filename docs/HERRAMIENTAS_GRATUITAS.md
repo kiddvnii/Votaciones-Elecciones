@@ -2,7 +2,7 @@
 
 ## Experiencia al instalar
 
-La app 1.4 incluye **Vosk español pequeño 0.42** y **Qwen3 0.6B para LiteRT-LM**. Ya no pide descargar ni importar modelos. Al abrir cada herramienta por primera vez, copia o descomprime sus recursos en almacenamiento privado y muestra el progreso. No hace ninguna solicitud de red para preparar ni usar los modelos. En aperturas posteriores reutiliza esa copia.
+La app 1.4.1 incluye **Vosk español pequeño 0.42** y **Qwen3 0.6B para LiteRT-LM**. Ya no pide descargar ni importar modelos. Al abrir cada herramienta por primera vez, copia o descomprime sus recursos en almacenamiento privado y muestra el progreso. No hace ninguna solicitud de red para preparar ni usar los modelos. En aperturas posteriores reutiliza esa copia.
 
 El primer inicio necesita espacio libre adicional: el modelo LLM ocupa aproximadamente 614 MB (586 MiB), el ZIP de voz unos 39 MB y la extracción de voz requiere más espacio. Cuenta además la instalación y las copias privadas; reserva varios GB libres. La preparación puede tardar y no equivale a una descarga. Se necesita un dispositivo arm64 con suficiente RAM; la inclusión de pesos no garantiza que todos los teléfonos puedan ejecutar el motor nativo. Un cierre durante la preparación permite reintentar en la siguiente apertura sin instalar archivos parciales como válidos.
 
@@ -27,7 +27,7 @@ Se conserva JNA 5.18.1@aar como apoyo de Vosk. Firebase Auth, Firestore, Analyti
 
 ## Compilar e instalar
 
-Requisitos: Java 17 recomendado para Android (Java 21 para la prueba JVM de inferencia), Android SDK 36, minSdk 24, destinos Java/Kotlin 17. Distribución arm64-v8a. El AAR de LiteRT-LM declara API 24. Los segmentos PT_LOAD arm64 de LiteRT-LM, Vosk y JNA se comprobaron con alineación de 16384 bytes.
+Requisitos: Java 17 recomendado para Android (Java 21 para la prueba JVM de inferencia), Android SDK 36, minSdk 24, destinos Java/Kotlin 17. Distribución arm64-v8a y x86_64 nativos. El AAR de LiteRT-LM declara API 24. Los segmentos PT_LOAD arm64 de LiteRT-LM, Vosk y JNA se comprobaron con alineación de 16384 bytes.
 
 **Android Studio / APK para probar:** ejecuta normalmente la variante **debug**. La tarea raíz `prepararModelos` obtiene los pesos al compilar (solo la primera vez si la caché sigue válida); se necesita internet en el equipo de desarrollo. Los modelos se guardan en `modelos/src/main/assets/modelos`, ignorados por Git para no subir binarios gigantes. El APK debug incluye ambos modelos en el mismo archivo y no necesita pasos manuales en el teléfono.
 
@@ -56,3 +56,27 @@ Pruebas de dispositivo necesarias: arranque sin red con instalación nueva, prep
 - [Modelo Qwen fijado](https://huggingface.co/litert-community/Qwen3-0.6B/blob/e6687177e00897731e7716267eebd4eba0dde7c2/Qwen3-0.6B.litertlm), [licencia original Qwen](https://huggingface.co/Qwen/Qwen3-0.6B/blob/main/LICENSE).
 - [Asset packs install-time y acceso AssetManager](https://developer.android.com/guide/playcore/asset-delivery/integrate-java).
 - [PdfBox-Android](https://github.com/TomRoush/PdfBox-Android), [NOTICE](https://github.com/TomRoush/PdfBox-Android/blob/master/NOTICE.txt), [JNA licencias](https://github.com/java-native-access/jna/blob/master/LICENSE).
+
+## Corrección de cierre en emuladores x86_64 (1.4.1)
+
+El registro del emulador del usuario mostraba ABI x86_64, guest architecture arm64, libnative_bridge_vdso y SIGSEGV dentro de liblitertlm_jni.so/nativeCreateEngine. La distribución anterior solo incluía ARM64 y forzaba traducción ARM en ese emulador. Ahora el APK/AAB incluye las bibliotecas nativas **x86_64 y arm64-v8a** de LiteRT-LM, Vosk y JNA. Android selecciona la biblioteca compatible al instalar; no se fuerza ARM en x86. Una comprobación adicional evita inicializar el asistente si detecta una instalación ARM traducida en x86.
+
+CI añade una prueba **instrumentada Android**, independiente de la prueba de host: instala el APK completo y el APK de pruebas en un emulador API 36 x86_64, comprueba que la biblioteca seleccionada sea x86_64, copia los pesos incluidos, ejecuta nativeCreateEngine, genera texto y recibe una respuesta de seguimiento. Esta prueba detecta cierres nativos y respuestas vacías; no certifica exactitud factual. El modelo pequeño puede fallar incluso en preguntas sencillas. Un cierre nativo hace fallar la prueba aunque am instrument devuelva cero. Se guardan diagnóstico y Logcat. El resultado del cambio se documenta en su PR; esta prueba no certifica todos los teléfonos ni todas las versiones de Android.
+
+Para actualizar desde la copia Git de Android Studio: `git pull --ff-only origin feature/alternativas-gratis-firebase`, sincronizar y ejecutar **app** otra vez. Debe instalarse el APK nuevo, no basta con volver a abrir la instalación anterior.
+
+## Dictado sin palabras en emulador
+
+El micrófono del PC no está habilitado por defecto en Android Emulator. En sus controles extendidos, abrir **Microphone** y activar **Virtual microphone uses host audio input**; revisar también el permiso de micrófono de Windows para aplicaciones de escritorio. El indicador verde de Android solo confirma que se abrió el micrófono virtual, no que esté llegando audio del PC. Ver [controles del emulador](https://developer.android.com/studio/run/emulator-extended-controls).
+
+La vista parcial del dictado se muestra junto a los controles inferiores para que no quede oculta bajo el editor. Guardar TXT permite detener y recoger lo reconocido aunque aún no haya un segmento final. Si pasan diez segundos sin palabras, se muestra orientación para el micrófono. El borrador confirmado/editado persiste localmente por usuario; Borrar lo elimina. Esto no crea un archivo TXT hasta que se elige Guardar TXT y un destino.
+
+## Fechas de elecciones
+
+El formulario usa un calendario Material para inicio y término, sin escritura manual. Inicio por defecto hoy; término por defecto **tres meses de calendario desde la creación**, no 90 días ni desde el inicio seleccionado. Por ejemplo, 5 de noviembre → 5 de febrero; al caer en un mes más corto se usa su último día. El término es editable en el formulario y después al editar. No puede preceder al inicio. Si eliges un inicio posterior al término propuesto, debes ajustar el término antes de guardar.
+
+Toda fecha nueva elegida debe ser hoy o futura según el día local del dispositivo. Al editar datos históricos se pueden conservar fechas pasadas sin cambiarlas; el calendario no permite seleccionar otra fecha pasada. Los documentos antiguos sin fechaTermino se siguen leyendo; al editarlos se propone hoy + 3 meses para que el usuario revise y guarde un término. No se migran datos automáticamente. Las fechas se muestran también en el listado y PDF. Esta modificación no crea un trabajo programado que cambie el estado Activa/Cerrada.
+
+**Publicar las reglas nuevas antes de guardar con esta versión:** Firebase Console → Firestore Database → Reglas → reemplazar todo por `firestore.rules` del repositorio y pulsar Publicar. No basta con hacer git pull: las reglas de la consola son independientes. Se conserva la separación por ownerUid. Las reglas verifican formato/calendario y orden del período; toleran un día UTC en la restricción de fecha actual para cubrir zonas horarias, mientras calendario y repositorio aplican estrictamente el día local. CI valida las reglas en un emulador de Firestore con pruebas de propietario, acceso ajeno, fechas, campos inválidos, update y registros históricos. Son reglas prototipo para esta app; revisar y verificar antes de distribuir ampliamente.
+
+La prueba instrumentada también carga el modelo español con Vosk/JNA x86_64 y procesa silencio verificando que no invente texto. No sustituye una prueba de voz con el micrófono del PC habilitado o en teléfono real.

@@ -25,7 +25,8 @@ class EleccionAdapter(
     override fun onBindViewHolder(holder: EleccionViewHolder, position: Int) {
         val eleccion = datos[position]
         holder.binding.txtNombreEleccion.text = eleccion.nombre
-        holder.binding.txtFechaEleccion.text = eleccion.fecha + "\nLugar: " + eleccion.lugar +
+        holder.binding.txtFechaEleccion.text = "Inicio: " + eleccion.fecha +
+            "\nTérmino: " + eleccion.fechaTermino.ifBlank { "Sin definir" } + "\nLugar: " + eleccion.lugar +
             "\nMesas: " + eleccion.mesas
         holder.binding.txtEstadoEleccion.text = eleccion.estado
 

@@ -10,6 +10,10 @@ import com.daniel.votacioneselecciones.databinding.DialogEleccionBinding
 import com.daniel.votacioneselecciones.modelo.Eleccion
 import com.daniel.votacioneselecciones.modelo.RepositorioDatos
 import com.daniel.votacioneselecciones.modelo.Validaciones
+import com.daniel.votacioneselecciones.modelo.FechasEleccion
+import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.DateValidatorPointForward
+import com.google.android.material.datepicker.MaterialDatePicker
 
 class Elecciones : PantallaConSesion() {
     private lateinit var binding: ActivityEleccionesBinding
@@ -43,9 +47,30 @@ class Elecciones : PantallaConSesion() {
         if (ocupada) return
         val campos = DialogEleccionBinding.inflate(layoutInflater)
         val id = existente?.id ?: RepositorioDatos.nuevoId("elecciones")
+        var fechaInicio = existente?.fecha ?: FechasEleccion.hoy()
+        var fechaTermino = existente?.fechaTermino?.takeIf { it.isNotBlank() } ?: FechasEleccion.terminoAutomatico()
+        var terminoEditado = existente != null && !existente.fechaTermino.isBlank()
+        campos.edtFechaEleccion.setText(FechasEleccion.visible(fechaInicio))
+        campos.edtFechaTermino.setText(FechasEleccion.visible(fechaTermino))
+        campos.edtFechaEleccion.setOnClickListener {
+            elegirFecha(fechaInicio, FechasEleccion.hoy(), "Inicio de la elección", "fecha_inicio") { elegida ->
+                fechaInicio = elegida
+                campos.edtFechaEleccion.setText(FechasEleccion.visible(elegida))
+                campos.campoFechaInicio.error = null
+            }
+        }
+        campos.campoFechaInicio.setEndIconOnClickListener { campos.edtFechaEleccion.performClick() }
+        campos.edtFechaTermino.setOnClickListener {
+            val minima = if ((FechasEleccion.milis(fechaInicio) ?: 0) > FechasEleccion.milis(FechasEleccion.hoy())!!) fechaInicio else FechasEleccion.hoy()
+            elegirFecha(fechaTermino, minima, "Término de la elección", "fecha_termino") { elegida ->
+                fechaTermino = elegida; terminoEditado = true
+                campos.edtFechaTermino.setText(FechasEleccion.visible(elegida))
+                campos.campoFechaTermino.error = null
+            }
+        }
+        campos.campoFechaTermino.setEndIconOnClickListener { campos.edtFechaTermino.performClick() }
         existente?.let {
             campos.edtNombreEleccion.setText(it.nombre)
-            campos.edtFechaEleccion.setText(it.fecha)
             campos.edtLugarEleccion.setText(it.lugar)
             campos.edtMesasEleccion.setText(it.mesas.toString())
             campos.radioCerrada.isChecked = it.estado == "Cerrada"
@@ -66,12 +91,19 @@ class Elecciones : PantallaConSesion() {
                 }
                 val eleccion = Eleccion(
                     id = id, nombre = campos.edtNombreEleccion.text.toString().trim(),
-                    fecha = campos.edtFechaEleccion.text.toString().trim(),
+                    fecha = fechaInicio,
+                    fechaTermino = if (!terminoEditado && existente == null) FechasEleccion.terminoAutomatico() else fechaTermino,
                     estado = if (campos.radioCerrada.isChecked) "Cerrada" else "Activa",
                     lugar = campos.edtLugarEleccion.text.toString().trim(), mesas = mesas
                 )
-                val error = Validaciones.eleccion(eleccion)
-                if (error != null) { aviso(error); return@setOnClickListener }
+                val errorCampos = Validaciones.eleccion(eleccion)
+                if (errorCampos != null) { aviso(errorCampos); return@setOnClickListener }
+                val errorFechas = FechasEleccion.errorPeriodo(eleccion, existente)
+                if (errorFechas != null) {
+                    if (errorFechas.contains("inicio") && !errorFechas.contains("término")) campos.campoFechaInicio.error = errorFechas
+                    else campos.campoFechaTermino.error = errorFechas
+                    aviso(errorFechas); return@setOnClickListener
+                }
                 ejecutar("Guardando elección…", { RepositorioDatos.guardarEleccion(eleccion, existente == null) }) {
                     dialogo.dismiss()
                     aviso(if (existente == null) "Elección creada correctamente." else "Elección actualizada.")
@@ -80,6 +112,23 @@ class Elecciones : PantallaConSesion() {
             }
         }
         dialogo.show()
+    }
+
+    private fun elegirFecha(actual: String, minima: String, titulo: String, etiqueta: String, alElegir: (String) -> Unit) {
+        if (supportFragmentManager.findFragmentByTag(etiqueta) != null) return
+        val desde = requireNotNull(FechasEleccion.milis(minima))
+        val seleccion = maxOf(FechasEleccion.milis(actual) ?: desde, desde)
+        val restricciones = CalendarConstraints.Builder()
+            .setStart(desde).setEnd(requireNotNull(FechasEleccion.milis("31-12-2100")))
+            .setOpenAt(seleccion).setValidator(DateValidatorPointForward.from(desde)).build()
+        MaterialDatePicker.Builder.datePicker()
+            .setTitleText(titulo).setSelection(seleccion)
+            .setCalendarConstraints(restricciones)
+            .setInputMode(MaterialDatePicker.INPUT_MODE_CALENDAR)
+            .setPositiveButtonText("Seleccionar").setNegativeButtonText("Cancelar")
+            .build().apply {
+                addOnPositiveButtonClickListener { alElegir(FechasEleccion.desdeMilis(it)) }
+            }.show(supportFragmentManager, etiqueta)
     }
 
     private fun confirmarEliminarEleccion(eleccion: Eleccion) {

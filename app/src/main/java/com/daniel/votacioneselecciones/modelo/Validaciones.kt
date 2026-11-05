@@ -10,7 +10,7 @@ object Validaciones {
         val anio = valor.takeLast(4).toIntOrNull() ?: return false
         if (anio !in 2000..2100) return false
         val posicion = ParsePosition(0)
-        val fecha = SimpleDateFormat("dd-MM-yyyy", Locale.ROOT).apply { isLenient = false }
+        val fecha = SimpleDateFormat("dd-MM-yyyy", Locale.ROOT).apply { isLenient = false; timeZone = java.util.TimeZone.getTimeZone("UTC") }
         return fecha.parse(valor, posicion) != null && posicion.index == valor.length
     }
 

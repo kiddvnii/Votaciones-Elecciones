@@ -66,8 +66,11 @@ object RepositorioDatos {
                 val anterior = tx.get(ref)
                 if (nueva) require(!anterior.exists()) { "Este registro ya se guardó. Actualiza el listado." }
                 else comprobarPropietario(anterior, uid)
+                val errorFechas = FechasEleccion.errorPeriodo(eleccion, if (nueva) null else anterior.toObject(Eleccion::class.java))
+                require(errorFechas == null) { errorFechas.orEmpty() }
                 tx.set(ref, mapOf(
                     "nombre" to eleccion.nombre, "fecha" to eleccion.fecha,
+                    "fechaTermino" to eleccion.fechaTermino,
                     "estado" to eleccion.estado, "lugar" to eleccion.lugar,
                     "mesas" to eleccion.mesas, "ownerUid" to uid
                 ))
