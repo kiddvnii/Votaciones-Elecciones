@@ -15,4 +15,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "RegistroVotacionesElecciones"
 include(":app")
- 
+
+include(":modelos")
+
+include(":verificacion")

@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-     
+
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
 }
@@ -9,14 +9,17 @@ plugins {
 android {
     namespace = "com.daniel.votacioneselecciones"
     compileSdk = 36
+    assetPacks += listOf(":modelos")
+    sourceSets.getByName("debug").assets.srcDir("../modelos/src/main/assets")
+    androidResources { noCompress += listOf("litertlm", "zip") }
 
     defaultConfig {
         applicationId = "com.daniel.votacioneselecciones"
         minSdk = 24
         targetSdk = 36
         ndk { abiFilters += "arm64-v8a" }
-        versionCode = 5
-        versionName = "1.3"
+        versionCode = 6
+        versionName = "1.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -74,3 +77,7 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     implementation("com.google.firebase:firebase-messaging")
 }
+
+
+
+tasks.named("preBuild") { dependsOn(rootProject.tasks.named("prepararModelos")) }
