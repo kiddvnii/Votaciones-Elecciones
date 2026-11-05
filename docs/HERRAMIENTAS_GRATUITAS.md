@@ -1,52 +1,58 @@
-# Tres librerías externas gratuitas para Android
+# Voz, chatbot y PDF: librerías externas con modelos incluidos
 
-Implementación del PR #1. Las tres funciones llaman a dependencias externas reales; no son accesos al dictado/PDF del SDK ni llamadas a Firebase AI Logic. Sin pagos por consulta. Los modelos se descargan aparte y tienen licencias propias.
+## Experiencia al instalar
 
-| Función | Dependencia fijada | Licencia del código | Uso real |
-|---|---|---|---|
-| Voz a texto | `com.alphacephei:vosk-android:0.3.75@aar` | Apache-2.0 | `Model`, `Recognizer`, `SpeechService`, micrófono PCM 16 kHz |
-| Chatbot local | `com.google.ai.edge.litertlm:litertlm-android:0.18.1` | Apache-2.0 | `Engine`, `Conversation.sendMessage`, backend CPU |
-| Reporte PDF | `com.tom-roush:pdfbox-android:2.0.27.0` | Apache-2.0 | `PDDocument`, `PDPageContentStream`, guardado con selector de documentos |
+La app 1.4 incluye **Vosk español pequeño 0.42** y **Qwen3 0.6B para LiteRT-LM**. Ya no pide descargar ni importar modelos. Al abrir cada herramienta por primera vez, copia o descomprime sus recursos en almacenamiento privado y muestra el progreso. No hace ninguna solicitud de red para preparar ni usar los modelos. En aperturas posteriores reutiliza esa copia.
 
-Vosk usa además JNA `5.18.1@aar` (LGPL-2.1-or-later / Apache-2.0, elección dual). Se mantienen Firebase Auth, Firestore, Analytics, Crashlytics, Messaging, App Check y notificaciones. Se elimina `firebase-ai`. App Check sigue protegiendo los servicios Firebase existentes; registra el token debug en desarrollo y Play Integrity para publicación si exiges App Check en consola. No se requiere habilitar AI Logic, Gemini ni facturación para estas tres herramientas. El panel de pruebas sigue eliminado.
+El primer inicio necesita espacio libre adicional: el modelo LLM ocupa aproximadamente 614 MB (586 MiB), el ZIP de voz unos 39 MB y la extracción de voz requiere más espacio. Cuenta además la instalación y las copias privadas; reserva varios GB libres. La preparación puede tardar y no equivale a una descarga. Se necesita un dispositivo arm64 con suficiente RAM; la inclusión de pesos no garantiza que todos los teléfonos puedan ejecutar el motor nativo. Un cierre durante la preparación permite reintentar en la siguiente apertura sin instalar archivos parciales como válidos.
 
-## Compatibilidad y decisión
+Las pantallas usan tarjetas, botones Material, burbujas de conversación, sugerencias, estados de preparación/error y márgenes reales para barras del sistema, cámara y teclado. El dictado tiene vista parcial, texto editable, contador, borrado con confirmación y guardado TXT. El chat tiene conversación local, reinicio y respuestas limitadas a 256 tokens, con contexto de 2048 tokens. No hay saludos ni respuestas de respaldo presentados como inferencia. Las sugerencias solo rellenan la pregunta.
 
-Revisión de fuentes oficiales: 5 de noviembre de 2026. El enlace de MediaPipe LLM Inference ya redirige a LiteRT-LM y la clase `LlmInference` está deprecada. Por eso se usa su sucesor, también una librería Android externa, en lugar de agregar una integración obsoleta. LiteRT-LM 0.18.1 tiene metadata Kotlin 2.4; el proyecto usa Kotlin 2.4.21. Se fija la versión para evitar cambios imprevistos.
+## Tres librerías Android externas
 
-La distribución de esta app se limita a **arm64-v8a** para el motor LLM. No sirve para un teléfono de 32 bits ni para un emulador x86. Compilar un APK no demuestra que su motor nativo o un modelo funcionen en cualquier teléfono. Verifica especialmente dispositivos Android con páginas de memoria de 16 KB antes de publicar. PdfBox-Android declara API 19+; Vosk demo usa API 21+. El AAR descargado de LiteRT-LM 0.18.1 declara API 24, compatible con minSdk 24 de esta app. Se comprobó que los segmentos PT_LOAD de las tres bibliotecas nativas arm64 (LiteRT-LM, Vosk y JNA) usan alineación de 16384 bytes; CI comprueba además la alineación ZIP del APK. No se fuerzan incompatibilidades con `overrideLibrary`.
+| Función | Dependencia | Uso |
+|---|---|---|
+| Voz a texto offline | `com.alphacephei:vosk-android:0.3.75@aar` | Model, Recognizer, SpeechService con micrófono a 16 kHz |
+| Chatbot IA local | `com.google.ai.edge.litertlm:litertlm-android:0.18.1` | Engine, Conversation, backend CPU |
+| Reporte PDF | `com.tom-roush:pdfbox-android:2.0.27.0` | PDDocument y PDPageContentStream |
 
-## Demostración de voz
+Se conserva JNA 5.18.1@aar como apoyo de Vosk. Firebase Auth, Firestore, Analytics, Crashlytics, Messaging, App Check y notificaciones siguen presentes. No se usa firebase-ai ni una API remota de IA. El panel de pruebas de evaluación permanece eliminado.
 
-1. Descarga el ZIP original **vosk-model-small-es-0.42** desde [Vosk Models](https://alphacephei.com/vosk/models). El catálogo indica 39 MB, licencia Apache-2.0. Un modelo pequeño suele requerir unos 300 MB de RAM; la cifra varía.
-2. Menú → Voz a texto → Importar modelo Vosk ZIP. No lo descomprimas antes. El importador limita entradas y tamaño expandido a 512 MiB, impide rutas fuera de su carpeta y comprueba la carga nativa antes de instalarlo.
-3. Concede micrófono, pulsa Hablar, dicta una frase en español y pulsa Detener. Edita el resultado y guarda un TXT en la ubicación elegida. No se guarda audio ni se envía a un servidor. La grabación se detiene al salir de la pantalla.
-4. Cierra y abre de nuevo para comprobar la persistencia del modelo y prueba sin conexión. La precisión depende de ruido, acento y vocabulario; no se garantiza transcripción exacta.
+## Modelos y redistribución
 
-## Demostración del chatbot
+- **Voz:** `vosk-model-small-es-0.42.zip`, obtenido de [Alpha Cephei](https://alphacephei.com/vosk/models), licencia Apache-2.0. SHA-256 `09b239888f633ef2f0b4e09736e3d9936acfd810bc65d53fad45261762c6511f`. Se entrega el ZIP original completo, con sus avisos y README. No se modifican los pesos.
+- **Chat:** `Qwen3-0.6B.litertlm` de [litert-community/Qwen3-0.6B](https://huggingface.co/litert-community/Qwen3-0.6B), revisión `e6687177e00897731e7716267eebd4eba0dde7c2`. Licencia Apache-2.0 del [modelo original de Qwen](https://huggingface.co/Qwen/Qwen3-0.6B). SHA-256 `c5f39b4191926786c3e6668b62af4d6eb15248dfc7a5348252a9b406f33f2108`. Esta variante INT8 está documentada por sus autores para LiteRT-LM 0.18.0 o posterior. No se usan las variantes NPU, web ni los nuevos archivos con pesos externos que requieren otro runtime.
+- Se reemplazó Gemma como modelo predeterminado para poder distribuir pesos Apache-2.0 sin pedir al usuario aceptar términos de Gemma o iniciar sesión en Hugging Face. El archivo de Qwen se empaqueta sin modificar. La configuración de conversación desactiva thinking y solicita respuestas breves en español.
+- La licencia Apache completa, ficha original de conversión y atribuciones se distribuyen en recursos. En el asistente se accede a los avisos pulsando “Licencias”.
 
-1. Consulta [Gemma3-1B-IT de litert-community](https://huggingface.co/litert-community/Gemma3-1B-IT/tree/main). Inicia sesión y acepta los términos de **Gemma** si el repositorio lo exige. Es una licencia propia del modelo, distinta de Apache-2.0 del motor. Revisa términos y restricciones antes de distribuir pesos.
-2. Descarga **Gemma3-1B-IT_multi-prefill-seq_q4_ekv4096.litertlm** (el catálogo consultado indica 584 MB). Evita las variantes con sufijos de chips/NPU; se usa el backend CPU. No sirven GGUF de llama.cpp, `.task` de MediaPipe ni renombrar una extensión. Los pesos NO se incluyen en Git ni en el APK; tampoco se aceptan términos automáticamente.
-3. Menú → Asistente local → Importar modelo .litertlm. La app copia hasta 4 GiB en almacenamiento privado y verifica la inicialización antes de reemplazar el archivo anterior. Reserva espacio para el original, la copia y, al reemplazar, ambos modelos. Modelos de alrededor de 1B cuantizados pueden ocupar cientos de MB y necesitan más RAM en ejecución; no hay una cifra universal ni garantía por versión Android. Para la demostración se recomienda un teléfono arm64 con 6–8 GB de RAM y varios GB libres, como recomendación práctica, no mínimo certificado.
-4. Espera “Modelo local listo”, envía una pregunta, otra de seguimiento y usa Nueva conversación para borrar el contexto. Se limita el contexto a 1024 tokens y las consultas a 2000 caracteres. Si se agota el contexto, reinicia. La carga y generación se ejecutan fuera del hilo de interfaz, en orden; al cerrar se liberan conversación y motor después del trabajo en curso.
-5. Sin modelo, Enviar permanece deshabilitado. Un archivo inválido o un dispositivo incompatible muestra un fallo; no se inventan respuestas de respaldo ni se presenta un saludo como inferencia. Una falta extrema de RAM o un fallo en código nativo puede terminar el proceso y no siempre es recuperable con una excepción. El historial visible dura hasta cerrar/recrear la pantalla; los pesos persisten. El chatbot no accede a Firestore, votos ni información electoral en tiempo real.
+## Compilar e instalar
 
-## Demostración del PDF
+Requisitos: Java 17 recomendado para Android (Java 21 para la prueba JVM de inferencia), Android SDK 36, minSdk 24, destinos Java/Kotlin 17. Distribución arm64-v8a. El AAR de LiteRT-LM declara API 24. Los segmentos PT_LOAD arm64 de LiteRT-LM, Vosk y JNA se comprobaron con alineación de 16384 bytes.
 
-Menú → Reporte PDF o Votaciones → Exportar PDF. Elige destino. Se consultan elecciones, candidatos y votos de la sesión mediante el repositorio Firestore existente y se escribe con PdfBox fuera del hilo principal. Incluye totales y paginación de textos largos; no añade datos personales del votante. Una consulta Firestore puede requerir conexión. La generación PDF en sí es local y no requiere modelo. Helvetica conserva caracteres españoles compatibles con WinAnsi; otros símbolos (por ejemplo emoji) se reemplazan por `?` para evitar abortar el reporte. El archivo puede quedar parcial si falla la escritura: elimina ese archivo y reintenta.
+**Android Studio / APK para probar:** ejecuta normalmente la variante **debug**. La tarea raíz `prepararModelos` obtiene los pesos al compilar (solo la primera vez si la caché sigue válida); se necesita internet en el equipo de desarrollo. Los modelos se guardan en `modelos/src/main/assets/modelos`, ignorados por Git para no subir binarios gigantes. El APK debug incluye ambos modelos en el mismo archivo y no necesita pasos manuales en el teléfono.
 
-## Validación
+**Google Play:** genera **bundleRelease**. El módulo `modelos` es un asset pack **install-time**: ambos modelos se entregan con la instalación antes de abrir la app. No se meten 650 MB en el módulo base de Play. El AAB debe firmarse con la clave de subida del propietario y validarse en pruebas internas de Play Console. El APK release suelto no contiene el asset pack: no lo distribuyas para probar esta experiencia; usa el APK debug completo o instala el AAB con todos sus paquetes. No se asegura aprobación de Play Console sin esa comprobación.
 
-CI ejecuta `:app:assembleDebug :app:assembleRelease :app:testDebugUnitTest` en Java 17 y Android SDK 36. Incluye pruebas del importador: ZIP traversal, estructura Vosk, límite de copia y archivo vacío. No descarga modelos ni requiere credenciales de IA. Compilación y pruebas unitarias no equivalen a pruebas de micrófono, inferencia o visualización PDF en un teléfono.
+Comandos:
 
-Pruebas manuales pendientes en dispositivo: importación/carga y persistencia de ambos modelos; permisos denegados; ZIP/modelo inválidos; falta de espacio; dictado offline y detención al salir; conversación de seguimiento, reinicio/contexto lleno y navegación durante generación; PDF vacío, varias páginas, acentos, emoji, cancelación y errores de destino. Verifica además login, CRUD Firestore, notificaciones y reportes Crashlytics con la configuración del proyecto.
+```text
+./gradlew :app:assembleDebug :app:assembleRelease :app:bundleRelease :app:testDebugUnitTest
+./gradlew :verificacion:run
+python3 tools/verificar_paquetes.py
+```
 
-## Fuentes y licencias
+Si una descarga del equipo de compilación falla o el SHA-256 del chatbot no coincide, la compilación se detiene. No existe una opción silenciosa para omitir los modelos. CI entrega el APK debug completo y el AAB release (sin firma de subida) en los artefactos `app-lista-para-instalar` y `bundle-play-con-modelos`.
 
-- [Vosk Android demo y versiones](https://github.com/alphacep/vosk-android-demo/blob/master/app/build.gradle), [Vosk licencia](https://github.com/alphacep/vosk-api/blob/master/COPYING), [catálogo de modelos](https://alphacephei.com/vosk/models).
-- [LiteRT-LM Android](https://developers.google.com/edge/litert-lm/android), [compatibilidad Kotlin](https://github.com/google-ai-edge/LiteRT-LM/blob/main/docs/api/kotlin/getting_started.md), [licencia](https://github.com/google-ai-edge/LiteRT-LM/blob/main/LICENSE), [MediaPipe deprecado](https://github.com/google-ai-edge/mediapipe/blob/master/mediapipe/tasks/java/com/google/mediapipe/tasks/genai/llminference/LlmInference.java).
-- [Gemma modelo y términos](https://huggingface.co/litert-community/Gemma3-1B-IT), [términos Gemma](https://ai.google.dev/gemma/terms).
-- [PdfBox-Android: versión, inicialización, API y licencia](https://github.com/TomRoush/PdfBox-Android), [NOTICE](https://github.com/TomRoush/PdfBox-Android/blob/master/NOTICE.txt).
-- [JNA licencias](https://github.com/java-native-access/jna/blob/master/LICENSE).
+## Verificación
 
-Antes de redistribuir el APK, conserva licencias y avisos de las dependencias y revisa sus componentes transitivos. Si distribuyes modelos, incorpora además sus términos y avisos. Esta integración no descarga ni redistribuye pesos.
+CI compila debug, release y bundleRelease; ejecuta pruebas unitarias del importador ZIP y copia limitada; comprueba los archivos reales dentro de APK/AAB y SHA-256 del LLM; verifica alineación ZIP a 16 KB. El módulo JVM `verificacion` usa LiteRT-LM **0.18.1**, los mismos pesos y CPU para ejecutar generación real y una pregunta de seguimiento. Esa prueba de host no certifica la JNI Android ni sustituye probar un teléfono.
+
+Pruebas de dispositivo necesarias: arranque sin red con instalación nueva, preparación interrumpida, dictado en español, permiso denegado, editar/borrar/guardar TXT, conversación y reinicio, límite de contexto, espacio/RAM insuficientes, rotación, teclado, texto grande, barra de estado/cámara, PDF vacío/varias páginas/acentos y regresiones de Auth/Firestore/notificaciones. La app requiere inicio de sesión; las consultas Firestore pueden necesitar internet, aunque estas dos herramientas procesan localmente.
+
+## Fuentes
+
+- [Vosk Android demo y versiones](https://github.com/alphacep/vosk-android-demo/blob/master/app/build.gradle), [Vosk licencia](https://github.com/alphacep/vosk-api/blob/master/COPYING), [modelos](https://alphacephei.com/vosk/models).
+- [LiteRT-LM Android](https://developers.google.com/edge/litert-lm/android), [compatibilidad Kotlin](https://github.com/google-ai-edge/LiteRT-LM/blob/main/docs/api/kotlin/getting_started.md), [licencia](https://github.com/google-ai-edge/LiteRT-LM/blob/main/LICENSE).
+- [Modelo Qwen fijado](https://huggingface.co/litert-community/Qwen3-0.6B/blob/e6687177e00897731e7716267eebd4eba0dde7c2/Qwen3-0.6B.litertlm), [licencia original Qwen](https://huggingface.co/Qwen/Qwen3-0.6B/blob/main/LICENSE).
+- [Asset packs install-time y acceso AssetManager](https://developer.android.com/guide/playcore/asset-delivery/integrate-java).
+- [PdfBox-Android](https://github.com/TomRoush/PdfBox-Android), [NOTICE](https://github.com/TomRoush/PdfBox-Android/blob/master/NOTICE.txt), [JNA licencias](https://github.com/java-native-access/jna/blob/master/LICENSE).

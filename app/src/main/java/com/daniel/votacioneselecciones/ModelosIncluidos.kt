@@ -25,7 +25,7 @@ object ModelosIncluidos {
     @Synchronized fun chat(contexto: Context, progreso: (Int) -> Unit): File {
         val destino = File(contexto.filesDir, "qwen3-c5f39b41.litertlm")
         val marca = File(contexto.filesDir, "qwen3-c5f39b41.preparado")
-        if (destino.isFile && destino.length() > 600_000_000 && marca.isFile) return destino
+        if (destino.isFile && destino.length() == 613_722_264L && marca.isFile) return destino
         val temporal = File(contexto.filesDir, "qwen3-incluido-temporal")
         try {
             val digest = MessageDigest.getInstance("SHA-256")
