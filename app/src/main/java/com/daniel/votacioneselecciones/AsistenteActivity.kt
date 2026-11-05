@@ -10,7 +10,8 @@ import com.google.ai.edge.litertlm.*
 import java.util.concurrent.Executors
 
 class AsistenteActivity : PantallaConSesion() {
-    private val worker = Executors.newSingleThreadExecutor()
+    // Serialize native engines across recreated screens to avoid duplicate model allocations.
+    companion object { private val worker = Executors.newSingleThreadExecutor() }
     @Volatile private var destruida = false
     private var engine: Engine? = null
     private var conversacion: Conversation? = null
@@ -175,6 +176,6 @@ class AsistenteActivity : PantallaConSesion() {
     }
     override fun onSaveInstanceState(outState: Bundle) { outState.putString("borrador", mensaje.text.toString()); super.onSaveInstanceState(outState) }
     override fun onDestroy() {
-        destruida = true; worker.execute { cerrarModelo() }; worker.shutdown(); super.onDestroy()
+        destruida = true; worker.execute { cerrarModelo() }; super.onDestroy()
     }
 }

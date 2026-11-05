@@ -28,6 +28,7 @@ class HerramientaUi(private val activity: AppCompatActivity, titulo: String, sub
     }
     init {
         WindowCompat.setDecorFitsSystemWindows(activity.window, false)
+        barrasTransparentes()
         val barra = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
             setBackgroundColor(Color.WHITE); setPadding(dp(8), dp(8), dp(20), dp(12))
@@ -55,6 +56,12 @@ class HerramientaUi(private val activity: AppCompatActivity, titulo: String, sub
             isAppearanceLightStatusBars = true; isAppearanceLightNavigationBars = true
         }
         ViewCompat.requestApplyInsets(raiz)
+    }
+    @Suppress("DEPRECATION")
+    private fun barrasTransparentes() {
+        activity.window.statusBarColor = Color.TRANSPARENT
+        activity.window.navigationBarColor = if (android.os.Build.VERSION.SDK_INT >= 26) Color.TRANSPARENT else azul
+        if (android.os.Build.VERSION.SDK_INT >= 29) activity.window.isNavigationBarContrastEnforced = false
     }
     fun dp(v: Int) = (v * activity.resources.displayMetrics.density).toInt()
     fun texto(valor: String, tamano: Int = 15, color: Int = gris, negrita: Boolean = false) = TextView(activity).apply {
