@@ -27,7 +27,11 @@ jobs:
       - name: Compile debug and run unit tests
         run: |
           chmod +x gradlew
-          ./gradlew :app:assembleDebug :app:assembleRelease :app:testDebugUnitTest --no-daemon
+          ./gradlew :app:assembleDebug :app:assembleRelease :app:bundleRelease :app:testDebugUnitTest --no-daemon
+      - name: Run actual bundled chatbot inference
+        run: ./gradlew :verificacion:run --no-daemon
+      - name: Verify bundled models and licenses
+        run: python3 tools/verificar_paquetes.py
       - name: Verify APK 16 KB alignment
         run: |
           for apk in app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/release/app-release-unsigned.apk; do
@@ -40,3 +44,11 @@ jobs:
           name: unit-test-reports
           path: app/build/reports/tests/
           if-no-files-found: ignore
+      - name: Upload ready-to-install APK and Play bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-con-modelos
+          compression-level: 0
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/bundle/release/app-release.aab

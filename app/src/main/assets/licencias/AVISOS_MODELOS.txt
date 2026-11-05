@@ -1,0 +1,7 @@
+Modelos incluidos, sin modificaciones por esta aplicación:
+
+VOZ: vosk-model-small-es-0.42, Alpha Cephei / proyecto Vosk. Licencia Apache 2.0. Fuente: https://alphacephei.com/vosk/models. El archivo ZIP original, con sus avisos y README, se entrega dentro del paquete de instalación.
+
+CHATBOT: Qwen3-0.6B, Qwen Team / Alibaba Cloud. Conversión LiteRT-LM de litert-community. Licencia Apache 2.0. Fuente: https://huggingface.co/litert-community/Qwen3-0.6B. Archivo Qwen3-0.6B.litertlm, revisión e6687177e00897731e7716267eebd4eba0dde7c2. Los pesos, tokenizador y metadatos se distribuyen sin modificaciones. La aplicación añade instrucciones en español y desactiva el modo de razonamiento en la configuración de conversación, sin alterar el modelo.
+
+La licencia completa Apache 2.0 y la ficha original de la conversión se incluyen en los recursos de modelos. Los modelos no ofrecen garantías de exactitud. Esta aplicación no está patrocinada por sus autores.
