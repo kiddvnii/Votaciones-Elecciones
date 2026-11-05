@@ -10,6 +10,17 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class AsistenteMotorInstrumentedTest {
+    @Test(timeout = 120000) fun cargaVoskNativoSinInventarTextoCuandoSoloHaySilencio() {
+        val contexto = InstrumentationRegistry.getInstrumentation().targetContext
+        assertEquals("x86_64", Build.SUPPORTED_ABIS.first())
+        org.vosk.Model(ModelosIncluidos.voz(contexto).path).use { modelo ->
+            org.vosk.Recognizer(modelo, 16000f).use { reconocedor ->
+                val silencio = ByteArray(32000)
+                reconocedor.acceptWaveForm(silencio, silencio.size)
+                assertEquals("", org.json.JSONObject(reconocedor.finalResult).optString("text"))
+            }
+        }
+    }
     @Test(timeout = 240000) fun cargaYRespondeConJniAndroidX86Nativa() {
         val contexto = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("x86_64", Build.SUPPORTED_ABIS.first())

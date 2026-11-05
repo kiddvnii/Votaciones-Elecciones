@@ -11,6 +11,6 @@ adb logcat -d > diagnostico/logcat.txt
 python3 - <<'PY'
 from pathlib import Path
 resultado = Path("diagnostico/instrumentacion.txt").read_text()
-assert "OK (1 test)" in resultado, "La prueba Android no terminó correctamente"
-print("JNI ANDROID X86_64: INICIALIZACION, INFERENCIA Y SEGUIMIENTO CORRECTOS")
+assert "OK (2 tests)" in resultado, "La prueba Android no terminó correctamente"
+print("JNI ANDROID X86_64: ASISTENTE Y VOSK NATIVOS VERIFICADOS")
 PY
