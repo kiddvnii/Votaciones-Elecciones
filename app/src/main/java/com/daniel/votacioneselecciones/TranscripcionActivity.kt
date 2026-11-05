@@ -136,7 +136,7 @@ class TranscripcionActivity : PantallaConSesion(), RecognitionListener {
             val escucha = object : RecognitionListener {
                 private fun vigente() = !destruida && turno == generacion
                 override fun onPartialResult(h: String) { if (vigente()) this@TranscripcionActivity.onPartialResult(h) }
-                override fun onResult(h: String) { if (vigente()) this@TranscripcionActivity.onResult(h) }
+                override fun onResult(h: String) { if (!destruida) this@TranscripcionActivity.onResult(h) }
                 override fun onFinalResult(h: String) { if (vigente()) this@TranscripcionActivity.onFinalResult(h) }
                 override fun onError(e: Exception) { if (vigente()) this@TranscripcionActivity.onError(e) }
                 override fun onTimeout() { if (vigente()) this@TranscripcionActivity.onTimeout() }
