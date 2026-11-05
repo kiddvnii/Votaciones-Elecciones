@@ -2,7 +2,7 @@
 
 ## Experiencia al instalar
 
-La app 1.4 incluye **Vosk español pequeño 0.42** y **Qwen3 0.6B para LiteRT-LM**. Ya no pide descargar ni importar modelos. Al abrir cada herramienta por primera vez, copia o descomprime sus recursos en almacenamiento privado y muestra el progreso. No hace ninguna solicitud de red para preparar ni usar los modelos. En aperturas posteriores reutiliza esa copia.
+La app 1.4.1 incluye **Vosk español pequeño 0.42** y **Qwen3 0.6B para LiteRT-LM**. Ya no pide descargar ni importar modelos. Al abrir cada herramienta por primera vez, copia o descomprime sus recursos en almacenamiento privado y muestra el progreso. No hace ninguna solicitud de red para preparar ni usar los modelos. En aperturas posteriores reutiliza esa copia.
 
 El primer inicio necesita espacio libre adicional: el modelo LLM ocupa aproximadamente 614 MB (586 MiB), el ZIP de voz unos 39 MB y la extracción de voz requiere más espacio. Cuenta además la instalación y las copias privadas; reserva varios GB libres. La preparación puede tardar y no equivale a una descarga. Se necesita un dispositivo arm64 con suficiente RAM; la inclusión de pesos no garantiza que todos los teléfonos puedan ejecutar el motor nativo. Un cierre durante la preparación permite reintentar en la siguiente apertura sin instalar archivos parciales como válidos.
 
@@ -27,7 +27,7 @@ Se conserva JNA 5.18.1@aar como apoyo de Vosk. Firebase Auth, Firestore, Analyti
 
 ## Compilar e instalar
 
-Requisitos: Java 17 recomendado para Android (Java 21 para la prueba JVM de inferencia), Android SDK 36, minSdk 24, destinos Java/Kotlin 17. Distribución arm64-v8a. El AAR de LiteRT-LM declara API 24. Los segmentos PT_LOAD arm64 de LiteRT-LM, Vosk y JNA se comprobaron con alineación de 16384 bytes.
+Requisitos: Java 17 recomendado para Android (Java 21 para la prueba JVM de inferencia), Android SDK 36, minSdk 24, destinos Java/Kotlin 17. Distribución arm64-v8a y x86_64 nativos. El AAR de LiteRT-LM declara API 24. Los segmentos PT_LOAD arm64 de LiteRT-LM, Vosk y JNA se comprobaron con alineación de 16384 bytes.
 
 **Android Studio / APK para probar:** ejecuta normalmente la variante **debug**. La tarea raíz `prepararModelos` obtiene los pesos al compilar (solo la primera vez si la caché sigue válida); se necesita internet en el equipo de desarrollo. Los modelos se guardan en `modelos/src/main/assets/modelos`, ignorados por Git para no subir binarios gigantes. El APK debug incluye ambos modelos en el mismo archivo y no necesita pasos manuales en el teléfono.
 
@@ -56,3 +56,11 @@ Pruebas de dispositivo necesarias: arranque sin red con instalación nueva, prep
 - [Modelo Qwen fijado](https://huggingface.co/litert-community/Qwen3-0.6B/blob/e6687177e00897731e7716267eebd4eba0dde7c2/Qwen3-0.6B.litertlm), [licencia original Qwen](https://huggingface.co/Qwen/Qwen3-0.6B/blob/main/LICENSE).
 - [Asset packs install-time y acceso AssetManager](https://developer.android.com/guide/playcore/asset-delivery/integrate-java).
 - [PdfBox-Android](https://github.com/TomRoush/PdfBox-Android), [NOTICE](https://github.com/TomRoush/PdfBox-Android/blob/master/NOTICE.txt), [JNA licencias](https://github.com/java-native-access/jna/blob/master/LICENSE).
+
+## Corrección de cierre en emuladores x86_64 (1.4.1)
+
+El registro del emulador del usuario mostraba ABI x86_64, guest architecture arm64, libnative_bridge_vdso y SIGSEGV dentro de liblitertlm_jni.so/nativeCreateEngine. La distribución anterior solo incluía ARM64 y forzaba traducción ARM en ese emulador. Ahora el APK/AAB incluye las bibliotecas nativas **x86_64 y arm64-v8a** de LiteRT-LM, Vosk y JNA. Android selecciona la biblioteca compatible al instalar; no se fuerza ARM en x86. Una comprobación adicional evita inicializar el asistente si detecta una instalación ARM traducida en x86.
+
+CI añade una prueba **instrumentada Android**, independiente de la prueba de host: instala el APK completo y el APK de pruebas en un emulador API 36 x86_64, comprueba que la biblioteca seleccionada sea x86_64, copia los pesos incluidos, ejecuta nativeCreateEngine, genera texto y comprueba una pregunta de seguimiento. Un cierre nativo hace fallar la prueba aunque am instrument devuelva cero. Se guardan diagnóstico y Logcat. El resultado del cambio se documenta en su PR; esta prueba no certifica todos los teléfonos ni todas las versiones de Android.
+
+Para actualizar desde la copia Git de Android Studio: `git pull --ff-only origin feature/alternativas-gratis-firebase`, sincronizar y ejecutar **app** otra vez. Debe instalarse el APK nuevo, no basta con volver a abrir la instalación anterior.
