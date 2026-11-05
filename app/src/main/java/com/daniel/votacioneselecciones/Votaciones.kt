@@ -1,6 +1,13 @@
 package com.daniel.votacioneselecciones
 
 import android.os.Bundle
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CancellationException
+import android.net.Uri
+import androidx.activity.result.contract.ActivityResultContracts
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.AdapterView
@@ -22,6 +29,9 @@ import com.google.android.gms.tasks.Task
 class Votaciones : PantallaConSesion() {
     private lateinit var binding: ActivityVotacionesBinding
     private lateinit var adaptador: VotoAdapter
+    private val exportarPdf = registerForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
+        if (uri != null) guardarReporte(uri)
+    }
 
     private data class Datos(
         val elecciones: List<Eleccion>, val candidatos: List<CandidatoModelo>, val votos: List<RegistroVoto>
@@ -33,6 +43,12 @@ class Votaciones : PantallaConSesion() {
         setContentView(binding.root)
         binding.btnAtras.setOnClickListener { finish() }
         binding.btnResultados.setOnClickListener { mostrarResultados() }
+        binding.btnExportarPdf.setOnClickListener { exportarPdf.launch("reporte-votaciones.pdf") }
+        if (intent.getBooleanExtra("exportar_pdf", false)) {
+            binding.root.post {
+                exportarPdf.launch("reporte-votaciones.pdf")
+            }
+        }
         adaptador = VotoAdapter(emptyList(), ::confirmarEliminarVoto)
         binding.recyclerVotos.layoutManager = LinearLayoutManager(this)
         binding.recyclerVotos.adapter = adaptador
@@ -118,6 +134,24 @@ class Votaciones : PantallaConSesion() {
                     actualizarLista()
                 }
             }.show()
+    }
+
+    private fun guardarReporte(uri: Uri) {
+        ejecutar("Preparando reporte PDF…", ::cargarDatos) { datos ->
+            lifecycleScope.launch {
+                binding.btnExportarPdf.isEnabled = false
+                try {
+                    withContext(Dispatchers.IO) {
+                        contentResolver.openOutputStream(uri)?.use { salida ->
+                            ReportePdf.escribir(salida, datos.elecciones, datos.candidatos, datos.votos)
+                        } ?: error("No se pudo abrir el documento")
+                    }
+                    aviso("Reporte PDF guardado.")
+                } catch (error: CancellationException) { throw error }
+                catch (error: Exception) { aviso("No se pudo generar el reporte PDF. El archivo puede haber quedado incompleto.") }
+                finally { binding.btnExportarPdf.isEnabled = true }
+            }
+        }
     }
 
     private fun mostrarResultados() {

@@ -1,5 +1,3 @@
-import java.io.File
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -16,6 +14,7 @@ android {
         applicationId = "com.daniel.votacioneselecciones"
         minSdk = 24
         targetSdk = 36
+        ndk { abiFilters += "arm64-v8a" }
         versionCode = 5
         versionName = "1.3"
 
@@ -35,11 +34,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
         viewBinding = true
@@ -47,12 +43,26 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}
+
 dependencies {
-    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation(platform("com.google.firebase:firebase-bom:35.1.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-crashlytics")
+    implementation("com.google.firebase:firebase-appcheck")
+    debugImplementation("com.google.firebase:firebase-appcheck-debug")
+    implementation("com.google.firebase:firebase-appcheck-playintegrity")
+    implementation("com.alphacephei:vosk-android:0.3.75@aar")
+    implementation("net.java.dev.jna:jna:5.18.1@aar")
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.18.1")
+    implementation("com.tom-roush:pdfbox-android:2.0.27.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.8.0")
@@ -63,26 +73,4 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     implementation("com.google.firebase:firebase-messaging")
-}
-
- 
- 
-val adbDebugView = androidComponents.sdkComponents.adb
-val fuenteActivador = rootProject.layout.projectDirectory.file("tools/ActivarDebugView.java")
-val paqueteDebugView = android.defaultConfig.applicationId.orEmpty()
-val activarDebugView = tasks.register<Exec>("activarDebugView") {
-    group = "verification"
-    description = "Activa y verifica DebugView en los dispositivos Android conectados."
-    inputs.file(fuenteActivador)
-     
-    isIgnoreExitValue = true
-    doFirst {
-        val nombreJava = if (System.getProperty("os.name").contains("Windows", true)) "java.exe" else "java"
-        val ejecutableJava = File(System.getProperty("java.home"), "bin/" + nombreJava)
-        commandLine(ejecutableJava.absolutePath, "--source", "17",
-            fuenteActivador.asFile.absolutePath, adbDebugView.get().asFile.absolutePath, paqueteDebugView)
-    }
-}
-tasks.matching { it.name == "assembleDebug" || it.name == "installDebug" }.configureEach {
-    finalizedBy(activarDebugView)
 }
