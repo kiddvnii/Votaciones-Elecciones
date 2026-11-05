@@ -10,7 +10,6 @@ import com.google.ai.edge.litertlm.*
 import java.util.concurrent.Executors
 
 class AsistenteActivity : PantallaConSesion() {
-    // Serialize native engines across recreated screens to avoid duplicate model allocations.
     companion object { private val worker = Executors.newSingleThreadExecutor() }
     @Volatile private var destruida = false
     private var engine: Engine? = null

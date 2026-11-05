@@ -17,7 +17,6 @@ object FechasEleccion {
     fun visible(fecha: String): String = milis(fecha)?.let {
         DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault()).apply { timeZone = utc }.format(Date(it))
     } ?: fecha
-    // Calendar.add clamps end-of-month dates: 30 Nov + 3 months = 28/29 Feb, not 90 days.
     fun terminoAutomatico(creacion: String = hoy()): String {
         val calendario = Calendar.getInstance(utc).apply {
             timeInMillis = requireNotNull(milis(creacion))

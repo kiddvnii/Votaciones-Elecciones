@@ -3,8 +3,6 @@ package com.daniel.votacioneselecciones
 import android.content.Context
 import java.io.File
 import java.security.MessageDigest
-
-/** No network calls: both assets arrive with the APK or install-time Play pack. */
 object ModelosIncluidos {
     private const val SHA_CHAT = "c5f39b4191926786c3e6668b62af4d6eb15248dfc7a5348252a9b406f33f2108"
     @Synchronized fun voz(contexto: Context): File {

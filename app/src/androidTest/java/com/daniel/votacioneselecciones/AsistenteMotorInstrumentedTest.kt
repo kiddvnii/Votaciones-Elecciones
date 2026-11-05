@@ -29,7 +29,7 @@ class AsistenteMotorInstrumentedTest {
         val motor = Engine(EngineConfig(modelPath = modelo.path, backend = Backend.CPU(), maxNumTokens = 2048,
             cacheDir = contexto.cacheDir.path))
         try {
-            motor.initialize() // Exact nativeCreateEngine entry point that crashed in the user's log.
+            motor.initialize()
             motor.createConversation(ConversationConfig(
                 systemInstruction = Contents.of("Responde en español y brevemente."),
                 extraContext = mapOf("enable_thinking" to false),
@@ -38,7 +38,6 @@ class AsistenteMotorInstrumentedTest {
             )).use { chat ->
                 assertTrue(chat.sendMessage("Di hola en español.").toString().isNotBlank())
                 val respuesta = chat.sendMessage("¿Qué es un candidato en una elección?").toString()
-                // This is the regression for nativeCreateEngine/SIGSEGV, not a model accuracy benchmark.
                 assertTrue("No se generó la respuesta de seguimiento", respuesta.isNotBlank())
                 android.util.Log.i("PruebaMotor", "Motor Android x86_64: carga y dos respuestas completas sin cierre nativo")
             }

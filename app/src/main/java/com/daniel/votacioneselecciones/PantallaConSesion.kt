@@ -14,7 +14,6 @@ import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import android.util.Log
 
- 
 abstract class PantallaConSesion : AppCompatActivity() {
     private var carga: AlertDialog? = null
     protected var ocupada = false
@@ -90,7 +89,6 @@ abstract class PantallaConSesion : AppCompatActivity() {
     }
 
     private fun informarError(error: Exception, reintentar: (() -> Unit)?, operacion: String) {
-        // Keep the complete chain: Firestore wraps its status around lower-level exceptions.
         Log.e("OperacionFirebase", "$operacion Falló la operación.", error)
         val mensaje = ErroresOperacion.mensaje(error)
         if (reintentar == null) aviso(mensaje)

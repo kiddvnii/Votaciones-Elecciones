@@ -3,8 +3,6 @@ package com.daniel.votacioneselecciones
 import java.io.File
 import java.io.InputStream
 import java.util.zip.ZipInputStream
-
-/** Imports into a staging directory; never extracts outside it or replaces a working model. */
 object ModelosLocales {
     fun copiar(entrada: InputStream, destino: File, limite: Long) {
         destino.outputStream().use { salida ->

@@ -26,8 +26,6 @@ object ReportePdf {
                 stream = PDPageContentStream(pdf, hoja)
                 y = PDRectangle.A4.height - 42f
             }
-            // Helvetica/WinAnsi cannot represent every Unicode glyph. Keep Spanish accents;
-            // replace unsupported code points explicitly so one emoji cannot abort the report.
             fun imprimible(texto: String): String = buildString {
                 texto.codePoints().forEach { punto ->
                     val caracter = String(Character.toChars(punto))

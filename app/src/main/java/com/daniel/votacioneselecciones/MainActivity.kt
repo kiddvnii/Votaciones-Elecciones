@@ -25,8 +25,6 @@ class MainActivity : AppCompatActivity() {
             binding.chkRecordar.isChecked = true
         }
         binding.btnIngresar.setOnClickListener { intentarIngresar() }
-
-        //para la app
     }
 
     override fun onResume() {

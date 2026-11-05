@@ -14,7 +14,6 @@
 .cxx
 local.properties
 
-# Downloaded weights are packaged during build, not committed to Git.
 modelos/src/main/assets/modelos/*.zip
 modelos/src/main/assets/modelos/*.litertlm
 modelos/src/main/assets/modelos/*.part
