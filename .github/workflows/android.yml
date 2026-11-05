@@ -104,3 +104,19 @@ jobs:
           name: diagnostico-android-x86
           path: diagnostico/
           if-no-files-found: ignore
+  firestore-rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install rules test tools
+        run: npm --prefix tools/reglas install --no-audit --no-fund --ignore-scripts
+      - name: Validate actual rules in Firestore emulator
+        run: tools/reglas/node_modules/.bin/firebase emulators:exec --only firestore --project demo-votaciones-pruebas "node --test --test-concurrency=1 tools/reglas/pruebas.mjs"

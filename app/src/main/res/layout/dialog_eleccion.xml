@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:fillViewport="true">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="wrap_content" android:fillViewport="true">
 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp">
 <com.google.android.material.textfield.TextInputLayout style="@style/CampoTexto" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:hint="@string/hint_nombre_eleccion">
 <com.google.android.material.textfield.TextInputEditText android:id="@+id/edtNombreEleccion" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textCapSentences" android:maxLength="100" />
 </com.google.android.material.textfield.TextInputLayout>
-<com.google.android.material.textfield.TextInputLayout style="@style/CampoTexto" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:hint="@string/hint_fecha">
-<com.google.android.material.textfield.TextInputEditText android:id="@+id/edtFechaEleccion" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="date" android:maxLength="10" />
+<com.google.android.material.textfield.TextInputLayout android:id="@+id/campoFechaInicio" style="@style/CampoTexto" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:hint="Fecha de inicio" app:endIconMode="custom" app:endIconDrawable="@drawable/ic_calendario" app:endIconContentDescription="Elegir fecha de inicio" app:helperText="Selecciona hoy o un día futuro">
+<com.google.android.material.textfield.TextInputEditText android:id="@+id/edtFechaEleccion" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" android:focusable="false" android:clickable="true" android:minHeight="56dp" />
+</com.google.android.material.textfield.TextInputLayout>
+<com.google.android.material.textfield.TextInputLayout android:id="@+id/campoFechaTermino" style="@style/CampoTexto" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:hint="Fecha de término" app:endIconMode="custom" app:endIconDrawable="@drawable/ic_calendario" app:endIconContentDescription="Elegir fecha de término" app:helperText="Por defecto, 3 meses desde la creación. Puedes editarla.">
+<com.google.android.material.textfield.TextInputEditText android:id="@+id/edtFechaTermino" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" android:focusable="false" android:clickable="true" android:minHeight="56dp" />
 </com.google.android.material.textfield.TextInputLayout>
 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/hint_estado" />
 <RadioGroup android:id="@+id/grupoEstado" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">

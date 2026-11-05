@@ -30,6 +30,18 @@ class TranscripcionActivity : PantallaConSesion() {
     private var reconocedor: Recognizer? = null
     private var generacion = 0
     private var preparando = false
+    private var ultimaParcial = ""
+    private var palabrasDetectadas = false
+    private val avisos = android.os.Handler(android.os.Looper.getMainLooper())
+    private val sinPalabras = Runnable {
+        if (!destruida && servicio != null && !palabrasDetectadas) {
+            diseno.estado("Aún no se reconocen palabras. Si usas el emulador, activa Microphone → Virtual microphone uses host audio input. En un teléfono, revisa el permiso y habla cerca del micrófono.")
+        }
+    }
+    private val borrador by lazy {
+        val uid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
+        getSharedPreferences("borrador-dictado-$uid", MODE_PRIVATE)
+    }
     private val worker = Executors.newSingleThreadExecutor()
     @Volatile private var destruida = false
     private val permiso = registerForActivityResult(ActivityResultContracts.RequestPermission()) { permitido ->
@@ -67,123 +79,175 @@ class TranscripcionActivity : PantallaConSesion() {
         texto = EditText(this).apply {
             hint = "Pulsa Empezar a dictar y habla con naturalidad.\n\nTambién puedes escribir aquí."
             textSize = 16f; minLines = 8; gravity = Gravity.TOP
-            setTextColor(Color.rgb(30, 41, 59)); setHintTextColor(diseno.gris)
-            setPadding(0, diseno.dp(8), 0, diseno.dp(8)); background = null
-            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
-            setText(savedInstanceState?.getString("texto").orEmpty())
-        }
-        tarjeta.addView(texto, LinearLayout.LayoutParams(-1, -2))
-        parcial = diseno.texto("", 14).apply { visibility = View.GONE }
-        tarjeta.addView(parcial)
-        diseno.agregar(tarjeta)
-        diseno.agregar(diseno.texto("Para un mejor resultado, habla cerca del micrófono y evita el ruido. Puedes corregir el texto antes de guardarlo.", 13))
-        hablar = diseno.boton("Empezar a dictar").apply {
-            isEnabled = false
-            setIconResource(R.drawable.ic_microfono)
-            setOnClickListener {
-                if (servicio != null) detener()
-                else if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) iniciar()
-                else permiso.launch(Manifest.permission.RECORD_AUDIO)
-            }
-        }
-        diseno.pie.addView(hablar, LinearLayout.LayoutParams(-1, diseno.dp(58)))
-        diseno.espacio(diseno.pie, 10)
-        val fila = LinearLayout(this)
-        val limpiar = diseno.boton("Borrar", true).apply {
-            setOnClickListener {
-                if (texto.text.isNotEmpty()) AlertDialog.Builder(this@TranscripcionActivity)
-                    .setTitle("¿Borrar transcripción?").setMessage("El texto que no hayas guardado se perderá.")
-                    .setNegativeButton("Cancelar", null).setPositiveButton("Borrar") { _, _ -> detener(); texto.setText("") }.show()
-            }
-        }
-        guardarBoton = diseno.boton("Guardar TXT", true).apply {
-            isEnabled = texto.text.isNotBlank()
-            setOnClickListener { detener(); if (texto.text.isNotBlank()) guardar.launch("transcripcion.txt") }
-        }
-        fila.addView(limpiar, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = diseno.dp(10) })
-        fila.addView(guardarBoton, LinearLayout.LayoutParams(0, -2, 1f))
-        diseno.pie.addView(fila)
-        diseno.pie.addView(diseno.texto("Modelo de voz incluido · Vosk español · Apache 2.0", 11).apply {
-            gravity = Gravity.CENTER; setPadding(0, diseno.dp(8), 0, 0)
-        })
-        texto.addTextChangedListener {
-            contador.text = "${it?.length ?: 0} caracteres"
-            guardarBoton.isEnabled = !it.isNullOrBlank()
-        }
-        contador.text = "${texto.length()} caracteres"
-        preparar()
+            setTextColor(Col…2910 tokens truncated…restore.DocumentSnapshot
+import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.firestore.Source
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+ 
+object RepositorioDatos {
+    private val db get() = FirestoreHelper.db
+    private val elecciones get() = db.collection("elecciones")
+    private val candidatos get() = db.collection("candidatos")
+    private val votos get() = db.collection("votos")
+
+    private fun <T> conSesion(operacion: (String) -> Task<T>): Task<T> = try {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+            ?: throw IllegalStateException("Tu sesión terminó. Vuelve a iniciar sesión.")
+        operacion(uid)
+    } catch (error: Exception) {
+        Tasks.forException(error)
     }
-    private fun preparar() {
-        if (preparando || modelo != null) return
-        preparando = true; hablar.isEnabled = false; reintentar.visibility = View.GONE
-        diseno.estado("Preparando la voz incluida. No necesitas descargar archivos…", ocupado = true)
-        worker.execute {
-            try {
-                val ruta = ModelosIncluidos.voz(applicationContext)
-                val cargado = Model(ruta.path)
-                runOnUiThread {
-                    if (destruida) cargado.close()
-                    else {
-                        modelo = cargado; preparando = false; hablar.isEnabled = true
-                        diseno.estado("Listo para escucharte · Sin conexión")
+
+    private fun <T> Task<T>.evento(nombre: String, entidad: String): Task<T> =
+        addOnSuccessListener { AnalyticsHelper.registrar(nombre, entidad) }
+
+    fun nuevoId(coleccion: String): String = db.collection(coleccion).document().id
+
+    fun obtenerElecciones(): Task<List<Eleccion>> = conSesion { uid ->
+        elecciones.whereEqualTo("ownerUid", uid).get(Source.SERVER).continueWith { tarea ->
+            tarea.result.documents.map { doc ->
+                requireNotNull(doc.toObject(Eleccion::class.java)).copy(id = doc.id)
+            }.sortedBy { it.nombre.lowercase(Locale.ROOT) }
+        }.evento("listado_consultado", "eleccion")
+    }
+
+    fun obtenerCandidatos(): Task<List<CandidatoModelo>> = conSesion { uid ->
+        candidatos.whereEqualTo("ownerUid", uid).get(Source.SERVER).continueWith { tarea ->
+            tarea.result.documents.map { doc ->
+                requireNotNull(doc.toObject(CandidatoModelo::class.java)).copy(id = doc.id)
+            }.sortedBy { it.nombre.lowercase(Locale.ROOT) }
+        }.evento("listado_consultado", "candidato")
+    }
+
+    fun obtenerVotos(): Task<List<RegistroVoto>> = conSesion { uid ->
+        votos.whereEqualTo("ownerUid", uid).get(Source.SERVER).continueWith { tarea ->
+            tarea.result.documents.map { doc ->
+                requireNotNull(doc.toObject(RegistroVoto::class.java)).copy(id = doc.id)
+            }.sortedByDescending { it.creadoEn }
+        }
+    }
+
+    fun guardarEleccion(eleccion: Eleccion, nueva: Boolean): Task<Unit> = conSesion { uid ->
+        require(Validaciones.eleccion(eleccion) == null) { Validaciones.eleccion(eleccion).orEmpty() }
+        obtenerElecciones().onSuccessTask { lista ->
+            require(lista.none { it.id != eleccion.id && it.nombre.equals(eleccion.nombre, true) }) {
+                "Ya existe una elección con ese nombre."
+            }
+            val ref = elecciones.document(eleccion.id)
+             
+            db.runTransaction<Unit> { tx ->
+                val anterior = tx.get(ref)
+                if (nueva) require(!anterior.exists()) { "Este registro ya se guardó. Actualiza el listado." }
+                else comprobarPropietario(anterior, uid)
+                val errorFechas = FechasEleccion.errorPeriodo(eleccion, if (nueva) null else anterior.toObject(Eleccion::class.java))
+                require(errorFechas == null) { errorFechas.orEmpty() }
+                tx.set(ref, mapOf(
+                    "nombre" to eleccion.nombre, "fecha" to eleccion.fecha,
+                    "fechaTermino" to eleccion.fechaTermino,
+                    "estado" to eleccion.estado, "lugar" to eleccion.lugar,
+                    "mesas" to eleccion.mesas, "ownerUid" to uid
+                ))
+                Unit
+            }.evento(if (nueva) "registro_creado" else "registro_actualizado", "eleccion")
+        }
+    }
+
+    fun guardarCandidato(candidato: CandidatoModelo, nuevo: Boolean): Task<Unit> = conSesion { uid ->
+        require(Validaciones.candidato(candidato) == null) { Validaciones.candidato(candidato).orEmpty() }
+        obtenerCandidatos().onSuccessTask { lista ->
+            require(lista.none {
+                it.id != candidato.id && it.eleccionId == candidato.eleccionId &&
+                    it.nombre.equals(candidato.nombre, true) && it.lista.equals(candidato.lista, true)
+            }) { "Ya existe este candidato y lista en esa elección." }
+            val ref = candidatos.document(candidato.id)
+            db.runTransaction<Unit> { tx ->
+                val anterior = tx.get(ref)
+                val padre = tx.get(elecciones.document(candidato.eleccionId))
+                comprobarPropietario(padre, uid)
+                if (nuevo) require(!anterior.exists()) { "Este candidato ya se guardó. Actualiza el listado." }
+                else {
+                    comprobarPropietario(anterior, uid)
+                    require(anterior.getString("eleccionId") == candidato.eleccionId) {
+                        "La elección de un candidato existente no se puede cambiar."
                     }
                 }
-            } catch (error: Exception) { ui { fallo("No se pudo preparar la voz. Comprueba el espacio libre y vuelve a intentarlo.") } }
-            catch (error: LinkageError) { ui { fallo("Este dispositivo no puede abrir el motor de voz incluido.") } }
+                tx.set(ref, mapOf(
+                    "nombre" to candidato.nombre, "lista" to candidato.lista,
+                    "edad" to candidato.edad, "cargo" to candidato.cargo,
+                    "propuesta" to candidato.propuesta, "eleccionId" to candidato.eleccionId,
+                    "ownerUid" to uid
+                ))
+                Unit
+            }.evento(if (nuevo) "registro_creado" else "registro_actualizado", "candidato")
         }
     }
-    private fun iniciar() {
-        val actual = modelo ?: return
-        try {
-            reconocedor = Recognizer(actual, 16000f)
-            val nuevo = SpeechService(reconocedor, 16000f)
-            servicio = nuevo
-            val turno = ++generacion
-            val escucha = object : RecognitionListener {
-                private fun vigente() = !destruida && turno == generacion
-                override fun onPartialResult(h: String) {
-                    if (vigente()) { parcial.visibility = View.VISIBLE; parcial.text = frase(h, "partial") }
-                }
-                override fun onResult(h: String) { if (!destruida) agregar(h) }
-                override fun onFinalResult(h: String) { if (vigente()) { agregar(h); detener(false) } }
-                override fun onError(e: Exception) {
-                    if (vigente()) { detener(false); diseno.estado("No se pudo escuchar. Revisa el permiso y que el micrófono no esté ocupado.", error = true) }
-                }
-                override fun onTimeout() { if (vigente()) detener() }
-            }
-            check(nuevo.startListening(escucha))
-            hablar.text = "Detener dictado"
-            diseno.estado("Te estamos escuchando…", ocupado = true)
-        } catch (error: Exception) {
-            detener(false)
-            diseno.estado("No se pudo abrir el micrófono. Comprueba el permiso y vuelve a intentarlo.", error = true)
+
+    fun eliminarEleccion(id: String): Task<Unit> = conSesion { uid ->
+        val consultaCandidatos = candidatos.whereEqualTo("ownerUid", uid)
+            .whereEqualTo("eleccionId", id).get(Source.SERVER)
+        val consultaVotos = votos.whereEqualTo("ownerUid", uid)
+            .whereEqualTo("eleccionId", id).get(Source.SERVER)
+        Tasks.whenAllSuccess<QuerySnapshot>(consultaCandidatos, consultaVotos).onSuccessTask { resultados ->
+            eliminarConDependencias(elecciones.document(id).get(Source.SERVER),
+                resultados.flatMap { it.documents }, uid)
+        }.evento("registro_eliminado", "eleccion")
+    }
+
+    fun eliminarCandidato(id: String): Task<Unit> = conSesion { uid ->
+        votos.whereEqualTo("ownerUid", uid).whereEqualTo("candidatoId", id)
+            .get(Source.SERVER).onSuccessTask { hijos ->
+                eliminarConDependencias(candidatos.document(id).get(Source.SERVER), hijos.documents, uid)
+            }.evento("registro_eliminado", "candidato")
+    }
+
+    private fun eliminarConDependencias(
+        padre: Task<DocumentSnapshot>, hijos: List<DocumentSnapshot>, uid: String
+    ): Task<Unit> = padre.onSuccessTask { documento ->
+        require(hijos.size <= 450) { "Hay demasiados registros asociados. Elimina primero votos y candidatos." }
+        db.runTransaction<Unit> { tx ->
+            comprobarPropietario(tx.get(documento.reference), uid)
+             
+            hijos.forEach { comprobarPropietario(tx.get(it.reference), uid) }
+            hijos.forEach { tx.delete(it.reference) }
+            tx.delete(documento.reference)
+            Unit
         }
     }
-    private fun detener(recogerFinal: Boolean = true) {
-        if (servicio == null && reconocedor == null) return
-        generacion++
-        servicio?.cancel()
-        if (recogerFinal && !destruida) reconocedor?.let { agregar(it.finalResult) }
-        servicio?.shutdown(); servicio = null
-        reconocedor?.close(); reconocedor = null
-        if (!destruida) {
-            hablar.text = "Empezar a dictar"; parcial.visibility = View.GONE
-            diseno.estado("Dictado detenido · Puedes editar y guardar el texto")
+
+    fun registrarVoto(id: String, eleccionId: String, candidatoId: String): Task<Unit> = conSesion { uid ->
+        val ref = votos.document(id)
+        db.runTransaction<Unit> { tx ->
+            val anterior = tx.get(ref)
+            val eleccion = tx.get(elecciones.document(eleccionId))
+            val candidato = tx.get(candidatos.document(candidatoId))
+            require(!anterior.exists()) { "Este voto ya se registró. Actualiza el listado." }
+            comprobarPropietario(eleccion, uid)
+            comprobarPropietario(candidato, uid)
+            require(eleccion.getString("estado") == "Activa") { "La elección está cerrada." }
+            require(candidato.getString("eleccionId") == eleccionId) { "El candidato pertenece a otra elección." }
+            tx.set(ref, mapOf(
+                "eleccionId" to eleccionId, "candidatoId" to candidatoId,
+                "fechaHora" to SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.ROOT).format(Date()),
+                "creadoEn" to System.currentTimeMillis(), "ownerUid" to uid
+            ))
+            Unit
         }
     }
-    private fun frase(json: String, campo: String) = runCatching { JSONObject(json).optString(campo) }.getOrDefault("")
-    private fun agregar(resultado: String) {
-        val frase = frase(resultado, "text")
-        if (frase.isNotBlank()) texto.append((if (texto.text.isEmpty()) "" else "\n") + frase)
+
+    fun eliminarVoto(id: String): Task<Unit> = conSesion { uid ->
+        val ref = votos.document(id)
+        db.runTransaction<Unit> { tx ->
+            comprobarPropietario(tx.get(ref), uid)
+            tx.delete(ref)
+            Unit
+        }
     }
-    private fun fallo(mensaje: String) {
-        preparando = false; diseno.estado(mensaje, error = true)
-        reintentar.visibility = View.VISIBLE; hablar.isEnabled = false
-    }
-    private fun ui(accion: () -> Unit) = runOnUiThread { if (!destruida) accion() }
-    override fun onSaveInstanceState(outState: Bundle) { outState.putString("texto", texto.text.toString()); super.onSaveInstanceState(outState) }
-    override fun onPause() { detener(); super.onPause() }
-    override fun onDestroy() {
-        destruida = true; detener(false); modelo?.close(); modelo = null; worker.shutdown(); super.onDestroy()
+
+    private fun comprobarPropietario(doc: DocumentSnapshot, uid: String) {
+        require(doc.exists()) { "El registro ya no existe. Actualiza el listado." }
+        require(doc.getString("ownerUid") == uid) { "No tienes permiso para modificar este registro." }
     }
 }

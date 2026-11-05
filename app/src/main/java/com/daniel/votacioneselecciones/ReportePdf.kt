@@ -60,7 +60,8 @@ object ReportePdf {
                 for (eleccion in elecciones.sortedBy { it.nombre }) {
                     linea("")
                     linea("${eleccion.nombre} (${eleccion.estado})", 13f)
-                    linea("Fecha: ${eleccion.fecha} · Lugar: ${eleccion.lugar}")
+                    linea("Inicio: ${eleccion.fecha} · Término: ${eleccion.fechaTermino.ifBlank { "Sin definir" }}")
+                    linea("Lugar: ${eleccion.lugar}")
                     val registrados = votos.filter { it.eleccionId == eleccion.id }
                     linea("Votos registrados: ${registrados.size}")
                     val participantes = candidatos.filter { it.eleccionId == eleccion.id }

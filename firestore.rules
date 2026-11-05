@@ -1,0 +1,117 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Modelo: documentos privados con ownerUid inmutable.
+    // elecciones: nombre/fecha/fechaTermino/estado/lugar (string), mesas (int).
+    // fechaTermino es obligatoria en nuevas escrituras; documentos antiguos siguen siendo legibles.
+    // candidatos: nombre/lista/cargo/propuesta/eleccionId (string), edad (int).
+    // votos: eleccionId/candidatoId/fechaHora (string), creadoEn (int, ms).
+    // IDs de relaciones y campos de votos no se modifican tras crearse.
+    function autenticado() {
+      return request.auth != null;
+    }
+    function propietario(d) {
+      return autenticado() && d.ownerUid == request.auth.uid;
+    }
+    function texto(v, minimo, maximo) {
+      return v is string && v.size() >= minimo && v.size() <= maximo;
+    }
+    function idValido(v) {
+      return texto(v, 1, 128) && v.matches('^[^/]+$');
+    }
+    function campos(d, nombres) {
+      return d.keys().hasAll(nombres) && d.keys().hasOnly(nombres);
+    }
+    function fechaValida(s) {
+      return texto(s, 10, 10) && s.matches('^[0-9]{2}-[0-9]{2}-[0-9]{4}$')
+        && int(s[6:10]) >= 2000 && int(s[6:10]) <= 2100
+        && timestamp.date(int(s[6:10]), int(s[3:5]), int(s[0:2])).day() == int(s[0:2])
+        && timestamp.date(int(s[6:10]), int(s[3:5]), int(s[0:2])).month() == int(s[3:5]);
+    }
+    function dia(s) {
+      return timestamp.date(int(s[6:10]), int(s[3:5]), int(s[0:2]));
+    }
+    function eleccionValida(d) {
+      return campos(d, ['ownerUid', 'nombre', 'fecha', 'fechaTermino', 'estado', 'lugar', 'mesas'])
+        && propietario(d) && texto(d.ownerUid, 1, 128)
+        && texto(d.nombre, 2, 100) && fechaValida(d.fecha) && fechaValida(d.fechaTermino)
+        && dia(d.fechaTermino) >= dia(d.fecha)
+        && d.estado in ['Activa', 'Cerrada']
+        && texto(d.lugar, 2, 120)
+        && d.mesas is int && d.mesas >= 1 && d.mesas <= 1000;
+    }
+    // Date-only values use the device's calendar day. One UTC day of tolerance covers time zones.
+    // The app's calendar and repository enforce today/future in the device's actual time zone.
+    function fechasNuevasValidas(d) {
+      return dia(d.fecha) >= request.time.date() - duration.value(1, 'd')
+        && dia(d.fechaTermino) >= request.time.date() - duration.value(1, 'd');
+    }
+    function fechasEditadasValidas(d) {
+      return (d.fecha == resource.data.fecha || dia(d.fecha) >= request.time.date() - duration.value(1, 'd'))
+        && (d.fechaTermino == resource.data.get('fechaTermino', '')
+          || dia(d.fechaTermino) >= request.time.date() - duration.value(1, 'd'));
+    }
+    function candidatoValido(d) {
+      return campos(d, ['ownerUid', 'nombre', 'lista', 'edad', 'cargo', 'propuesta', 'eleccionId'])
+        && propietario(d) && texto(d.ownerUid, 1, 128)
+        && texto(d.nombre, 2, 100) && texto(d.lista, 1, 80)
+        && texto(d.cargo, 2, 80) && texto(d.propuesta, 5, 500)
+        && d.edad is int && d.edad >= 18 && d.edad <= 120
+        && idValido(d.eleccionId);
+    }
+    function eleccionPropia(id) {
+      return propietario(get(/databases/$(database)/documents/elecciones/$(id)).data);
+    }
+    function votoValido(d) {
+      return campos(d, ['ownerUid', 'eleccionId', 'candidatoId', 'fechaHora', 'creadoEn'])
+        && propietario(d) && texto(d.ownerUid, 1, 128)
+        && idValido(d.eleccionId) && idValido(d.candidatoId)
+        && texto(d.fechaHora, 16, 16)
+        && d.fechaHora.matches('^[0-9]{2}-[0-9]{2}-[0-9]{4} [0-9]{2}:[0-9]{2}$')
+        && d.creadoEn is int
+        && d.creadoEn >= request.time.toMillis() - 300000
+        && d.creadoEn <= request.time.toMillis() + 300000;
+    }
+    function relacionVotoValida(d) {
+      let eleccion = get(/databases/$(database)/documents/elecciones/$(d.eleccionId));
+      let candidato = get(/databases/$(database)/documents/candidatos/$(d.candidatoId));
+      return propietario(eleccion.data) && eleccion.data.estado == 'Activa'
+        && propietario(candidato.data) && candidato.data.eleccionId == d.eleccionId;
+    }
+    match /elecciones/{id} {
+      // La app consulta documentos inexistentes dentro de transacciones de alta.
+      allow get: if autenticado() &&
+        (!exists(/databases/$(database)/documents/elecciones/$(id)) || propietario(resource.data));
+      allow list: if propietario(resource.data);
+      allow create: if eleccionValida(request.resource.data) && fechasNuevasValidas(request.resource.data);
+      allow update: if propietario(resource.data)
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && eleccionValida(request.resource.data) && fechasEditadasValidas(request.resource.data);
+      allow delete: if propietario(resource.data);
+    }
+    match /candidatos/{id} {
+      allow get: if autenticado() &&
+        (!exists(/databases/$(database)/documents/candidatos/$(id)) || propietario(resource.data));
+      allow list: if propietario(resource.data);
+      allow create: if candidatoValido(request.resource.data)
+        && eleccionPropia(request.resource.data.eleccionId);
+      allow update: if propietario(resource.data)
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.eleccionId == resource.data.eleccionId
+        && candidatoValido(request.resource.data)
+        && eleccionPropia(request.resource.data.eleccionId);
+      allow delete: if propietario(resource.data);
+    }
+    match /votos/{id} {
+      allow get: if autenticado() &&
+        (!exists(/databases/$(database)/documents/votos/$(id)) || propietario(resource.data));
+      allow list: if propietario(resource.data);
+      allow create: if votoValido(request.resource.data)
+        && relacionVotoValida(request.resource.data);
+      // La app registra o elimina votos; no permite editarlos.
+      allow update: if false;
+      allow delete: if propietario(resource.data);
+    }
+    // Cualquier otra ruta queda denegada por defecto.
+  }
+}
