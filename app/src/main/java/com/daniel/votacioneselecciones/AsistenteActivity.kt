@@ -102,6 +102,7 @@ class AsistenteActivity : PantallaConSesion() {
     private fun crearConversacion() = checkNotNull(engine).createConversation(ConversationConfig(
         systemInstruction = Contents.of("Eres un asistente de una app educativa de elecciones. Responde en español, de forma breve y clara. No tienes acceso a registros de votos, internet ni datos en tiempo real. Si no sabes algo, dilo. No inventes resultados ni instrucciones oficiales."),
         extraContext = mapOf("enable_thinking" to false),
+        samplerConfig = SamplerConfig(topK = 1, topP = 1.0, temperature = 0.0, seed = 0),
         maxOutputToken = 256
     ))
     private fun nueva() {
