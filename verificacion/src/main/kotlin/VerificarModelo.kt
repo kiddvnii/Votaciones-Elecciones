@@ -1,7 +1,4 @@
 import com.google.ai.edge.litertlm.*
-
-// Runs real CPU inference with the exact weights and library version packaged by Android.
-// This host smoke test does not replace testing the Android JNI on a physical phone.
 fun main(args: Array<String>) {
     Engine(EngineConfig(modelPath = args.single(), backend = Backend.CPU(), maxNumTokens = 2048)).use { engine ->
         engine.initialize()

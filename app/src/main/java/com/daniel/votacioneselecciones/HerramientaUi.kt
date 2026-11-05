@@ -12,8 +12,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButton
-
-/** Shared native layout: responsive spacing, readable cards and real system/keyboard insets. */
 class HerramientaUi(private val activity: AppCompatActivity, titulo: String, subtitulo: String) {
     val azul = Color.rgb(27, 58, 107)
     val gris = Color.rgb(100, 116, 139)
